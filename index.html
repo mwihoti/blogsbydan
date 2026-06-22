@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blogs by Dan</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Blogs by Dan home">
+        <span class="brand-mark">BD</span>
+        <span>
+          <strong>Blogs by Dan</strong>
+          <small>Obsidian-first writing center</small>
+        </span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#library">Library</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#medium">Medium</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Draft in Obsidian. Curate here. Publish when ready.</p>
+          <h1 id="page-title">Your personal blog command center.</h1>
+          <p>
+            Keep article ideas, drafts, edited posts, and Medium-ready exports in one place.
+            This site is intentionally simple so your writing stays portable Markdown.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#library">Browse library</a>
+            <a class="button secondary" href="#workflow">See workflow</a>
+          </div>
+        </div>
+        <aside class="status-panel" id="status-panel" aria-label="Writing status">
+          <div><span>Ideas</span><strong id="count-idea">-</strong></div>
+          <div><span>Drafts</span><strong id="count-drafted">-</strong></div>
+          <div><span>Reviewed</span><strong id="count-reviewed">-</strong></div>
+          <div><span>Ready</span><strong id="count-ready">-</strong></div>
+          <div><span>Published</span><strong id="count-published">-</strong></div>
+        </aside>
+      </section>
+
+      <section class="section" id="library" aria-labelledby="library-title">
+        <div class="section-heading">
+          <p class="eyebrow">Library</p>
+          <h2 id="library-title">All posts</h2>
+        </div>
+        <div class="board-controls">
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="idea">Ideas</button>
+            <button class="filter-btn" data-filter="drafted">Drafts</button>
+            <button class="filter-btn" data-filter="reviewed">Reviewed</button>
+            <button class="filter-btn" data-filter="ready">Ready</button>
+            <button class="filter-btn" data-filter="published">Published</button>
+          </div>
+          <div class="library-actions">
+            <button class="button primary compact" id="new-post-btn">New Post</button>
+            <button class="refresh-btn" id="refresh-btn" title="Refresh posts">↻</button>
+          </div>
+        </div>
+        <form class="composer" id="new-post-form" hidden>
+          <div class="composer-header">
+            <h3>Create a new blog idea</h3>
+            <button type="button" class="action-btn" id="close-composer-btn">Close</button>
+          </div>
+          <div class="form-grid">
+            <label>
+              Title
+              <input name="title" required placeholder="Example: Why local-first AI writing wins">
+            </label>
+            <label>
+              Writing style
+              <select name="writing_style">
+                <option value="Educational + personal + practical">Educational + personal + practical</option>
+                <option value="Personal essay">Personal essay</option>
+                <option value="Technical tutorial">Technical tutorial</option>
+                <option value="Explainer">Explainer</option>
+                <option value="Analytical">Analytical</option>
+                <option value="Journalistic">Journalistic</option>
+                <option value="Founder/build-in-public">Founder/build-in-public</option>
+                <option value="Opinion/editorial">Opinion/editorial</option>
+                <option value="Case study">Case study</option>
+              </select>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="Writing, AI, Local-First">
+            </label>
+            <label>
+              Target reader
+              <input name="target_reader" placeholder="Builders, writers, founders">
+            </label>
+          </div>
+          <label>
+            Summary
+            <input name="summary" placeholder="One sentence describing the post">
+          </label>
+          <label>
+            Draft
+            <textarea name="body" rows="12" placeholder="# Your title&#10;&#10;Start writing here..."></textarea>
+          </label>
+          <div class="composer-actions">
+            <span id="composer-status"></span>
+            <button type="submit" class="button primary compact">Save to Ideas</button>
+          </div>
+        </form>
+        <div class="post-grid" id="post-grid"></div>
+      </section>
+    </main>
+
+    <section class="editor-panel" id="file-editor" hidden aria-label="Markdown file editor">
+      <div class="editor-shell">
+        <div class="editor-header">
+          <div>
+            <p class="eyebrow">Editor</p>
+            <h2 id="editor-title">Edit file</h2>
+            <small id="editor-path"></small>
+          </div>
+          <button type="button" class="action-btn" id="close-editor-btn">Close</button>
+        </div>
+        <textarea id="editor-content" spellcheck="true"></textarea>
+        <div class="editor-actions">
+          <span id="editor-status"></span>
+          <button type="button" class="button secondary compact" id="save-editor-btn">Save Answers</button>
+        </div>
+      </div>
+    </section>
+
+    <template id="post-card-template">
+      <article class="post-card">
+        <div class="post-meta">
+          <span class="post-date"></span>
+          <span class="post-style"></span>
+        </div>
+        <h3><a class="post-title-link" href="#" target="_blank"></a></h3>
+        <p class="post-summary"></p>
+        <div class="tag-row"></div>
+        <div class="post-actions">
+          <span class="status"></span>
+          <div class="action-buttons"></div>
+        </div>
+        <div class="workflow-output" style="display:none"></div>
+      </article>
+    </template>
+
+    <footer>
+      <span>Blogs by Dan</span>
+      <span>Markdown-first publishing</span>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
