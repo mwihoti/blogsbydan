@@ -81,6 +81,18 @@ describe("GET /api/status", () => {
   });
 });
 
+describe("GET /api/growth", () => {
+  it("returns growth collections", async () => {
+    const { status, data } = await fetchJson(`${baseUrl}/api/growth`);
+    assert.equal(status, 200);
+    assert.ok(Array.isArray(data.businesses));
+    assert.ok(Array.isArray(data.knowledge));
+    assert.ok(Array.isArray(data.trends));
+    assert.ok(Array.isArray(data.campaigns));
+    assert.ok(Array.isArray(data.storyboards));
+  });
+});
+
 describe("POST /api/workflow/run", () => {
   it("rejects requests without post path", async () => {
     const { status, data } = await fetchJson(`${baseUrl}/api/workflow/run`, {

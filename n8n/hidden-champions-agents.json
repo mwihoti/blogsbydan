@@ -1,0 +1,235 @@
+{
+  "name": "Hidden Champions - Verify, Judge, Humanize",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-260, 360]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hidden-champions",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook (from MVP)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-260, 140],
+      "webhookId": "hidden-champions-hook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "business_type",
+              "value": "={{ ($json.body && $json.body.business_type) ? $json.body.business_type : \"Tech education\" }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "city",
+              "value": "={{ ($json.body && $json.body.city) ? $json.body.city : \"Kirinyaga\" }}",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "offer",
+              "value": "={{ ($json.body && $json.body.offer) ? $json.body.offer : \"We educate corporates on tech efficiency\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-req",
+      "name": "Build Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-20, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.22.0.1:3030/api/leads/discover",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ business_type: $json.business_type, city: $json.city, offer: $json.offer, limit: 5 }) }}",
+        "options": {}
+      },
+      "id": "discover-1",
+      "name": "Discover (MVP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 240]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "leads",
+        "options": {}
+      },
+      "id": "split-1",
+      "name": "Split Leads",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [460, 240]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You verify whether a discovered Kenyan business is REAL, ACCURATE, and genuinely HIDDEN from the startup ecosystem.\n\nUse ONLY the data provided. Do not invent facts. If you cannot confirm something from the data, mark it unknown.\n\nA business is HIDDEN if it has NO visible VC funding, NO TechCabal/Disrupt/startup-media coverage, and NO startup-event presence. Local-only signals (Google reviews, longevity, location) are exactly what we want.\n\nLead data:\n{{ JSON.stringify($json.lead) }}",
+        "hasOutputParser": true
+      },
+      "id": "verifier-1",
+      "name": "Verifier",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [700, 240]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "id": "verifier-model",
+      "name": "Verifier Model (Gemini Pro)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [660, 460]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"verified\": true,\n  \"isHidden\": true,\n  \"confidence\": 0.0,\n  \"evidence\": [\"...\"],\n  \"reasonsIfRejected\": [\"...\"]\n}"
+      },
+      "id": "verifier-parser",
+      "name": "Verifier Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [860, 460]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.output.verified }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-verified",
+      "name": "IF Verified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [980, 240]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a strict editor. Decide if this business profile reads GENERIC and templated (vague praise, no specific detail) or SPECIFIC and credible.\n\nProfile:\n{{ $('Split Leads').item.json.profile }}",
+        "hasOutputParser": true
+      },
+      "id": "judge-1",
+      "name": "Judge (Generic Detector)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1240, 140]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "judge-model",
+      "name": "Judge Model (Gemini Flash)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [1200, 360]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"generic\": true,\n  \"score\": 1,\n  \"reasons\": [\"...\"]\n}"
+      },
+      "id": "judge-parser",
+      "name": "Judge Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [1400, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.output.generic }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-generic",
+      "name": "IF Generic",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1520, 140]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rewrite this business profile so it reads human, specific, and credible. TONE ONLY: you may NOT add any business detail not present in the verified data. Keep every fact. Remove vague praise.\n\nVerified data:\n{{ JSON.stringify($('Split Leads').item.json.lead) }}\n\nProfile to rewrite:\n{{ $('Split Leads').item.json.profile }}",
+        "hasOutputParser": false
+      },
+      "id": "humanizer-1",
+      "name": "Humanizer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1780, 40]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "id": "humanizer-model",
+      "name": "Humanizer Model (Gemini Pro)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [1740, 260]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]] },
+    "Webhook (from MVP)": { "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]] },
+    "Build Request": { "main": [[{ "node": "Discover (MVP)", "type": "main", "index": 0 }]] },
+    "Discover (MVP)": { "main": [[{ "node": "Split Leads", "type": "main", "index": 0 }]] },
+    "Split Leads": { "main": [[{ "node": "Verifier", "type": "main", "index": 0 }]] },
+    "Verifier Model (Gemini Pro)": { "ai_languageModel": [[{ "node": "Verifier", "type": "ai_languageModel", "index": 0 }]] },
+    "Verifier Parser": { "ai_outputParser": [[{ "node": "Verifier", "type": "ai_outputParser", "index": 0 }]] },
+    "Verifier": { "main": [[{ "node": "IF Verified", "type": "main", "index": 0 }]] },
+    "IF Verified": { "main": [[{ "node": "Judge (Generic Detector)", "type": "main", "index": 0 }], []] },
+    "Judge Model (Gemini Flash)": { "ai_languageModel": [[{ "node": "Judge (Generic Detector)", "type": "ai_languageModel", "index": 0 }]] },
+    "Judge Parser": { "ai_outputParser": [[{ "node": "Judge (Generic Detector)", "type": "ai_outputParser", "index": 0 }]] },
+    "Judge (Generic Detector)": { "main": [[{ "node": "IF Generic", "type": "main", "index": 0 }]] },
+    "IF Generic": { "main": [[{ "node": "Humanizer", "type": "main", "index": 0 }], []] },
+    "Humanizer Model (Gemini Pro)": { "ai_languageModel": [[{ "node": "Humanizer", "type": "ai_languageModel", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

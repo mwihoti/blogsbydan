@@ -4,12 +4,33 @@ import { createServer } from "node:http";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { extname, join, dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getBusinessSignals } from "../data/business-signals.js";
+import { loadEnvFile } from "node:process";
 import { listPosts, getPost, createPost } from "../api/posts.js";
+import { discoverLeads, leadProviderStatus, listLeadItems, searchLeads } from "../api/leads.js";
 import { runWorkflowStep } from "../api/workflow.js";
+import {
+  addKnowledge,
+  captureTrend,
+  createBusiness,
+  generateCampaign,
+  listGrowthItems,
+} from "../api/growth.js";
+import { fetchGdeltSignals } from "../sources/gdelt.js";
+import { fetchRedditSignals } from "../sources/reddit.js";
+import { fetchRssSignals } from "../sources/rss.js";
+import { fetchWebpageSignal } from "../sources/webpage.js";
+import { fetchYouTubeSignals } from "../sources/youtube.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const CONTENT_ROOT = join(ROOT, "content");
+
+try {
+  loadEnvFile(join(ROOT, ".env"));
+} catch {
+  // .env is optional; shell-provided variables still work.
+}
 
 const MIME = {
   ".html": "text/html",
@@ -126,6 +147,95 @@ export function createApp() {
         counts[p.status] = (counts[p.status] || 0) + 1;
       }
       return jsonResponse(res, { counts, total: posts.length });
+    }
+
+    if (pathname === "/api/growth" && method === "GET") {
+      const items = await listGrowthItems();
+      return jsonResponse(res, items);
+    }
+
+    if (pathname === "/api/leads" && method === "GET") {
+      const items = await listLeadItems();
+      return jsonResponse(res, items);
+    }
+
+    if (pathname === "/api/leads/providers" && method === "GET") {
+      return jsonResponse(res, leadProviderStatus());
+    }
+
+    if (pathname === "/api/leads/signals" && method === "GET") {
+      return jsonResponse(res, getBusinessSignals(url.searchParams.get("business_type") || ""));
+    }
+
+    if (pathname === "/api/leads/search" && method === "POST") {
+      const body = await readBody(req);
+      const result = await searchLeads(body);
+      return jsonResponse(res, result, result.success ? 201 : 400);
+    }
+
+    if (pathname === "/api/leads/discover" && method === "POST") {
+      const body = await readBody(req);
+      const result = await discoverLeads(body);
+      return jsonResponse(res, result, result.success ? 200 : 400);
+    }
+
+    if (pathname === "/api/growth/signals" && method === "GET") {
+      const source = url.searchParams.get("source") || "gdelt";
+      const query = url.searchParams.get("query") || "Kenya business SME founder";
+      const feed = url.searchParams.get("feed") || "";
+      try {
+        let signals = [];
+        if (source === "rss") {
+          signals = await fetchRssSignals({ feeds: feed ? [feed] : [] });
+        } else if (source === "webpage") {
+          signals = await fetchWebpageSignal({ url: query });
+        } else if (source === "youtube") {
+          signals = await fetchYouTubeSignals({
+            apiKey: process.env.YOUTUBE_API_KEY,
+            query,
+          });
+        } else if (source === "reddit") {
+          signals = await fetchRedditSignals({
+            subreddit: url.searchParams.get("subreddit") || "Kenya",
+            query,
+          });
+        } else {
+          signals = await fetchGdeltSignals({ query });
+        }
+        return jsonResponse(res, { success: true, source, query, signals });
+      } catch (err) {
+        return jsonResponse(res, {
+          success: false,
+          source,
+          query,
+          signals: [],
+          error: err.message || "Could not fetch signals",
+        }, 200);
+      }
+    }
+
+    if (pathname === "/api/growth/businesses" && method === "POST") {
+      const body = await readBody(req);
+      const result = await createBusiness(body);
+      return jsonResponse(res, result, result.success ? 201 : 400);
+    }
+
+    if (pathname === "/api/growth/knowledge" && method === "POST") {
+      const body = await readBody(req);
+      const result = await addKnowledge(body);
+      return jsonResponse(res, result, result.success ? 201 : 400);
+    }
+
+    if (pathname === "/api/growth/trends" && method === "POST") {
+      const body = await readBody(req);
+      const result = await captureTrend(body);
+      return jsonResponse(res, result, result.success ? 201 : 400);
+    }
+
+    if (pathname === "/api/growth/campaigns" && method === "POST") {
+      const body = await readBody(req);
+      const result = await generateCampaign(body);
+      return jsonResponse(res, result, result.success ? 201 : 400);
     }
 
     let filePath;

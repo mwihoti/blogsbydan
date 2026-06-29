@@ -16,24 +16,26 @@
         </span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#library">Library</a>
+        <a href="#home">Home</a>
+        <a href="#growth">Growth</a>
+        <a href="#library">Posts</a>
         <a href="#workflow">Workflow</a>
         <a href="#medium">Medium</a>
       </nav>
     </header>
 
     <main>
-      <section class="hero" aria-labelledby="page-title">
+      <section class="hero" id="home" aria-labelledby="page-title">
         <div class="hero-copy">
           <p class="eyebrow">Draft in Obsidian. Curate here. Publish when ready.</p>
           <h1 id="page-title">Your personal blog command center.</h1>
           <p>
-            Keep article ideas, drafts, edited posts, and Medium-ready exports in one place.
-            This site is intentionally simple so your writing stays portable Markdown.
+            Keep article ideas, drafts, edited posts, Medium-ready exports, and Kuzana-style
+            business growth campaigns in one portable Markdown workspace.
           </p>
           <div class="actions">
-            <a class="button primary" href="#library">Browse library</a>
-            <a class="button secondary" href="#workflow">See workflow</a>
+            <a class="button primary" href="#growth">Open growth engine</a>
+            <a class="button secondary" href="#library">Browse posts</a>
           </div>
         </div>
         <aside class="status-panel" id="status-panel" aria-label="Writing status">
@@ -45,11 +47,274 @@
         </aside>
       </section>
 
+      <section class="section growth-section" id="growth" aria-labelledby="growth-title">
+        <div class="section-heading">
+          <p class="eyebrow">Kuzana MVP</p>
+          <h2 id="growth-title">Business growth engine</h2>
+          <p>Create a business profile, ground it in real knowledge, capture a trend, and generate a campaign brief with a script, storyboard, CTA, and lead follow-up plan.</p>
+        </div>
+        <nav class="section-nav" aria-label="Growth workflow navigation">
+          <a href="#business-form">Business</a>
+          <a href="#knowledge-form">Knowledge</a>
+          <a href="#trend-form">Trends</a>
+          <a href="#campaign-form">Campaign</a>
+          <a href="#lead-search-form">Leads</a>
+          <a href="#campaign-results">Results</a>
+        </nav>
+        <div class="growth-grid">
+          <form class="composer growth-form" id="business-form">
+            <div class="composer-header">
+              <h3>Business profile</h3>
+            </div>
+            <div class="form-grid">
+              <label>
+                Business name
+                <input name="name" required placeholder="Example: Nairobi Tax Clinic">
+              </label>
+              <label>
+                Industry
+                <input name="industry" placeholder="Accounting, retail, logistics">
+              </label>
+              <label>
+                Location
+                <input name="location" placeholder="Nairobi, Kenya">
+              </label>
+              <label>
+                Customers
+                <input name="customers" placeholder="SME founders, shop owners">
+              </label>
+            </div>
+            <label>
+              Daily activities
+              <textarea name="activities" rows="4" placeholder="What does this business do every day?"></textarea>
+            </label>
+            <label>
+              Offers
+              <input name="offers" placeholder="Tax health checks, bookkeeping cleanup">
+            </label>
+            <label>
+              Content goals
+              <input name="content_goals" placeholder="Leads, trust, awareness">
+            </label>
+            <label>
+              CTA
+              <input name="cta" placeholder="Book a Ksh 2,000 consultation">
+            </label>
+            <div class="composer-actions">
+              <span id="business-status"></span>
+              <button type="submit" class="button primary compact">Save Business</button>
+            </div>
+          </form>
+
+          <form class="composer growth-form" id="knowledge-form">
+            <div class="composer-header">
+              <h3>Business knowledge</h3>
+            </div>
+            <label>
+              Business
+              <select name="business" id="knowledge-business" required></select>
+            </label>
+            <label>
+              Title
+              <input name="title" required placeholder="Founder story, offer notes, customer FAQ">
+            </label>
+            <label>
+              Notes or document text
+              <textarea name="text" rows="8" required placeholder="Paste business docs, FAQs, offer details, customer insights, or founder voice notes."></textarea>
+            </label>
+            <div class="composer-actions">
+              <span id="knowledge-status"></span>
+              <button type="submit" class="button primary compact">Add Knowledge</button>
+            </div>
+          </form>
+
+          <form class="composer growth-form" id="trend-form">
+            <div class="composer-header">
+              <h3>Trend capture</h3>
+            </div>
+            <div class="signal-fetcher">
+              <div class="form-grid">
+                <label>
+                  Monitor source
+                  <select id="signal-source">
+                    <option value="webpage">Website page</option>
+                    <option value="gdelt">GDELT news</option>
+                    <option value="reddit">Reddit</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="rss">RSS feed</option>
+                  </select>
+                </label>
+                <label>
+                  Query or RSS URL
+                  <input id="signal-query" placeholder="Kenya SME tax OR https://example.com/feed.xml">
+                </label>
+              </div>
+              <div class="composer-actions">
+                <span id="signal-status"></span>
+                <button type="button" class="button secondary compact" id="fetch-signals-btn">Fetch Signals</button>
+              </div>
+              <div class="signal-list" id="signal-list"></div>
+            </div>
+            <div class="form-grid">
+              <label>
+                Trend title
+                <input name="title" required placeholder="Example: New tax compliance debate">
+              </label>
+              <label>
+                Source
+                <select name="source">
+                  <option value="manual">Manual / pasted social</option>
+                  <option value="rss">RSS</option>
+                  <option value="gdelt">GDELT</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="reddit">Reddit</option>
+                  <option value="webpage">Website page</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              URL
+              <input name="url" placeholder="TikTok, X, Instagram, Reddit, YouTube, news link">
+            </label>
+            <label>
+              What is happening?
+              <textarea name="text" rows="8" required placeholder="Paste the post, caption, headline, transcript, or your description of the trend."></textarea>
+            </label>
+            <div class="composer-actions">
+              <span id="trend-status"></span>
+              <button type="submit" class="button primary compact">Save Trend</button>
+            </div>
+          </form>
+
+          <form class="composer growth-form" id="campaign-form">
+            <div class="composer-header">
+              <h3>Generate campaign</h3>
+            </div>
+            <p class="form-note">Campaigns include target leads, outreach copy, qualification questions, follow-up steps, and optional payment details.</p>
+            <div class="form-grid">
+              <label>
+                Business
+                <select name="business" id="campaign-business" required></select>
+              </label>
+              <label>
+                Trend
+                <select name="trend" id="campaign-trend" required></select>
+              </label>
+              <label>
+                Target lead
+                <select name="lead" id="campaign-lead"></select>
+              </label>
+              <label>
+                Channel
+                <select name="channel">
+                  <option>LinkedIn</option>
+                  <option>TikTok/Reels</option>
+                  <option>WhatsApp</option>
+                  <option>Blog</option>
+                  <option>X thread</option>
+                </select>
+              </label>
+              <label>
+                Goal
+                <select name="goal">
+                  <option>leads</option>
+                  <option>sales</option>
+                  <option>trust</option>
+                  <option>awareness</option>
+                  <option>investor credibility</option>
+                </select>
+              </label>
+              <label>
+                Offer price
+                <input name="price" placeholder="2000">
+              </label>
+              <label>
+                Currency
+                <select name="currency">
+                  <option>KES</option>
+                  <option>USDC</option>
+                  <option>USD</option>
+                </select>
+              </label>
+              <label>
+                Payment method
+                <select name="payment_method">
+                  <option>Avalanche USDC</option>
+                  <option>M-Pesa</option>
+                  <option>Manual invoice</option>
+                </select>
+              </label>
+              <label>
+                Payment address
+                <input name="payment_address" placeholder="Avalanche C-Chain address or payment reference">
+              </label>
+              <label>
+                Token contract
+                <input name="payment_token" placeholder="Optional ERC-20 token address on Fuji">
+              </label>
+            </div>
+            <div class="composer-actions">
+              <span id="campaign-status"></span>
+              <button type="submit" class="button primary compact">Generate Brief</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="lead-generator" id="lead-generator">
+          <form class="composer growth-form" id="lead-search-form">
+            <div class="composer-header">
+              <h3>Lead generator</h3>
+            </div>
+            <p class="form-note">Find businesses by type and city, infer customer pain points, and generate one-by-one outreach drafts based on your offer.</p>
+            <p class="form-note" id="lead-provider-status">Checking lead provider...</p>
+            <div class="form-grid">
+              <label>
+                Business type
+                <input name="business_type" id="lead-business-type" required placeholder="Real estate agencies, clinics, restaurants">
+              </label>
+              <label>
+                City
+                <input name="city" required placeholder="Nairobi, Mombasa, Kisumu">
+              </label>
+              <label>
+                Result limit
+                <input name="limit" type="number" min="1" max="20" value="10">
+              </label>
+            </div>
+            <div class="signal-list" id="lead-signal-preview"></div>
+            <label>
+              What your business does
+              <textarea name="offer" rows="5" required placeholder="Example: We create AI-assisted video campaigns and landing pages that help property firms get more qualified viewing requests."></textarea>
+            </label>
+            <div class="composer-actions">
+              <span id="lead-status"></span>
+              <button type="submit" class="button primary compact">Find Leads</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="growth-results" id="campaign-results">
+          <h3>Generated campaigns</h3>
+          <div class="post-grid" id="campaign-grid"></div>
+        </div>
+
+        <div class="growth-results" id="lead-results">
+          <h3>Lead CRM</h3>
+          <div class="post-grid" id="lead-grid"></div>
+        </div>
+      </section>
+
       <section class="section" id="library" aria-labelledby="library-title">
         <div class="section-heading">
           <p class="eyebrow">Library</p>
           <h2 id="library-title">All posts</h2>
         </div>
+        <nav class="section-nav" aria-label="Post library navigation">
+          <a href="#library">All posts</a>
+          <a href="#new-post-form">New post</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#medium">Medium</a>
+        </nav>
         <div class="board-controls">
           <div class="filter-group">
             <button class="filter-btn active" data-filter="all">All</button>
@@ -112,7 +377,59 @@
         </form>
         <div class="post-grid" id="post-grid"></div>
       </section>
+
+      <section class="section info-section" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <p class="eyebrow">Workflow</p>
+          <h2 id="workflow-title">How content moves</h2>
+        </div>
+        <div class="info-grid">
+          <article>
+            <h3>Blog workflow</h3>
+            <p>Idea, research, outline, draft, review, check, metadata, ready, and published Markdown files stay in the repository.</p>
+          </article>
+          <article>
+            <h3>Growth workflow</h3>
+            <p>Business profiles, knowledge, trend signals, campaign briefs, storyboards, and payment prompts live as Markdown too.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section info-section" id="medium" aria-labelledby="medium-title">
+        <div class="section-heading">
+          <p class="eyebrow">Publishing</p>
+          <h2 id="medium-title">Medium and campaign exports</h2>
+        </div>
+        <div class="info-grid">
+          <article>
+            <h3>Medium</h3>
+            <p>Use ready posts for manual Medium syndication after publishing to your own site first.</p>
+          </article>
+          <article>
+            <h3>Campaigns</h3>
+            <p>Open generated campaign, brief, and storyboard files from the Growth results cards for copy-paste or production.</p>
+          </article>
+        </div>
+      </section>
     </main>
+
+    <section class="editor-panel" id="payment-panel" hidden aria-label="Avalanche payment panel">
+      <div class="payment-shell">
+        <div class="editor-header">
+          <div>
+            <p class="eyebrow">Avalanche Payment</p>
+            <h2 id="payment-title">Send payment</h2>
+            <small id="payment-details"></small>
+          </div>
+          <button type="button" class="action-btn" id="close-payment-btn">Close</button>
+        </div>
+        <div class="payment-summary" id="payment-summary"></div>
+        <div class="editor-actions">
+          <span id="payment-status"></span>
+          <button type="button" class="button primary compact" id="send-payment-btn">Connect & Send</button>
+        </div>
+      </div>
+    </section>
 
     <section class="editor-panel" id="file-editor" hidden aria-label="Markdown file editor">
       <div class="editor-shell">
@@ -124,10 +441,14 @@
           </div>
           <button type="button" class="action-btn" id="close-editor-btn">Close</button>
         </div>
-        <textarea id="editor-content" spellcheck="true"></textarea>
+        <div class="editor-workspace">
+          <label class="editor-pane-label" for="editor-content">Markdown</label>
+          <textarea id="editor-content" spellcheck="true"></textarea>
+          <section class="markdown-preview" id="markdown-preview" aria-label="Rendered Markdown preview"></section>
+        </div>
         <div class="editor-actions">
           <span id="editor-status"></span>
-          <button type="button" class="button secondary compact" id="save-editor-btn">Save Answers</button>
+          <button type="button" class="button secondary compact" id="save-editor-btn">Save File</button>
         </div>
       </div>
     </section>

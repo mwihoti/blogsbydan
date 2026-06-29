@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: blogsbydan
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Secrets — set these in the Render dashboard (sync:false = not stored in git)
+      - key: SERPAPI_KEY
+        sync: false
+      - key: APIFY_TOKEN
+        sync: false
+      - key: APIFY_ACTOR_ID
+        sync: false
+      - key: OUTSCRAPER_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: QWEN_API_KEY
+        sync: false
+      # Where this app should trigger the n8n pipeline (your public n8n webhook)
+      - key: N8N_WEBHOOK_URL
+        sync: false
