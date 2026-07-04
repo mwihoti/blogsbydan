@@ -1,26 +1,50 @@
 const STATUS_ORDER = [
-  "idea", "researched", "outlined", "drafted",
-  "reviewed", "checked", "approved", "metadata",
-  "ready", "published",
+  "idea",
+  "researched",
+  "outlined",
+  "drafted",
+  "reviewed",
+  "checked",
+  "approved",
+  "metadata",
+  "ready",
+  "published",
 ];
 
 const STATUS_LABELS = {
-  idea: "Idea", researched: "Researched", outlined: "Outlined",
-  drafted: "Draft", reviewed: "Reviewed", checked: "Checked",
-  approved: "Approved", metadata: "Metadata",
-  ready: "Ready", published: "Published",
+  idea: "Idea",
+  researched: "Researched",
+  outlined: "Outlined",
+  drafted: "Draft",
+  reviewed: "Reviewed",
+  checked: "Checked",
+  approved: "Approved",
+  metadata: "Metadata",
+  ready: "Ready",
+  published: "Published",
 };
 
 const AGENT_BY_STATUS = {
-  idea: "research", researched: "outline", outlined: "draft",
-  drafted: "editor", reviewed: "checker", checked: "final-reviewer",
-  approved: "metadata", metadata: "publisher",
+  idea: "research",
+  researched: "outline",
+  outlined: "draft",
+  drafted: "editor",
+  reviewed: "checker",
+  checked: "final-reviewer",
+  approved: "metadata",
+  metadata: "publisher",
 };
 
 const NEXT_STATUS = {
-  idea: "researched", researched: "outlined", outlined: "drafted",
-  drafted: "reviewed", reviewed: "checked", checked: "approved",
-  approved: "metadata", metadata: "ready", ready: "published",
+  idea: "researched",
+  researched: "outlined",
+  outlined: "drafted",
+  drafted: "reviewed",
+  reviewed: "checked",
+  checked: "approved",
+  approved: "metadata",
+  metadata: "ready",
+  ready: "published",
 };
 
 const grid = document.getElementById("post-grid");
@@ -59,12 +83,35 @@ const leadBusinessType = document.getElementById("lead-business-type");
 const leadSignalPreview = document.getElementById("lead-signal-preview");
 
 let allPosts = [];
-let growthItems = { businesses: [], knowledge: [], leads: [], trends: [], campaigns: [], briefs: [], storyboards: [], videoSpecs: [] };
+let growthItems = {
+  businesses: [],
+  knowledge: [],
+  leads: [],
+  trends: [],
+  campaigns: [],
+  briefs: [],
+  storyboards: [],
+  videoSpecs: [],
+};
 let leadItems = { searches: [], leads: [], outreach: [] };
-let leadProviderInfo = { active_provider: "demo-fallback" };
+let leadProviderInfo = {
+  active_provider: null,
+  has_provider: false,
+  error: "Loading provider status...",
+};
 let currentFilter = "all";
 let activeEditorPath = "";
 let activePayment = null;
+
+const LEAD_STATUSES = [
+  "new",
+  "contacted",
+  "replied",
+  "meeting booked",
+  "won",
+  "lost",
+];
+let leadFilter = "all";
 
 const FUJI_CHAIN_ID = "0xa869";
 const FUJI_EXPLORER = "https://testnet.snowtrace.io";
@@ -147,7 +194,13 @@ function updateCounts() {
     const s = p.status;
     if (s === "idea" || s === "researched" || s === "outlined") counts.idea++;
     else if (s === "drafted") counts.drafted++;
-    else if (s === "reviewed" || s === "checked" || s === "approved" || s === "metadata") counts.reviewed++;
+    else if (
+      s === "reviewed" ||
+      s === "checked" ||
+      s === "approved" ||
+      s === "metadata"
+    )
+      counts.reviewed++;
     else if (s === "ready") counts.ready++;
     else if (s === "published") counts.published++;
   }
@@ -233,9 +286,12 @@ async function runWorkflow(post, agent) {
   });
 
   if (outputArea) {
-    const details = [result.output, result.error].filter(Boolean).join("\n").trim();
+    const details = [result.output, result.error]
+      .filter(Boolean)
+      .join("\n")
+      .trim();
     outputArea.textContent = result.success
-      ? (details || "Workflow completed successfully.")
+      ? details || "Workflow completed successfully."
       : `Error: ${details || "Unknown error"}`;
   }
 
@@ -246,7 +302,12 @@ async function publishPost(post) {
   const card = document.querySelector(`[data-slug="${post.slug}"]`);
   const outputArea = card?.querySelector(".workflow-output");
 
-  if (!confirm(`Publish "${post.title}"? This will move it to content/published/.`)) return;
+  if (
+    !confirm(
+      `Publish "${post.title}"? This will move it to content/published/.`,
+    )
+  )
+    return;
 
   if (outputArea) {
     outputArea.style.display = "block";
@@ -263,7 +324,9 @@ async function publishPost(post) {
     outputArea.textContent = result.success
       ? "Published successfully!"
       : `Error: ${result.error || "Unknown"}`;
-    setTimeout(() => { outputArea.style.display = "none"; }, 5000);
+    setTimeout(() => {
+      outputArea.style.display = "none";
+    }, 5000);
   }
 
   await loadPosts();
@@ -278,7 +341,9 @@ async function openEditor(link) {
   fileEditor.hidden = false;
   setEditorStatus("Loading...");
 
-  const data = await fetchAPI(`/api/file?path=${encodeURIComponent(link.web_path)}`);
+  const data = await fetchAPI(
+    `/api/file?path=${encodeURIComponent(link.web_path)}`,
+  );
   if (!data.success) {
     setEditorStatus(data.error || "Could not load file.", true);
     return;
@@ -286,7 +351,10 @@ async function openEditor(link) {
 
   editorContent.value = data.content || "";
   renderMarkdownPreview(editorContent.value);
-  setEditorStatus("Edit the markdown on the left. The designed preview updates on the right.");
+  updateEditorMeta();
+  setEditorStatus(
+    "Edit the markdown on the left. The designed preview updates on the right.",
+  );
   editorContent.focus();
 }
 
@@ -303,13 +371,18 @@ function renderInlineMarkdown(value) {
   let html = escapeHtml(value)
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, (_, text, href) => {
       const token = `@@LINK_${links.length}@@`;
-      links.push(`<a href="${href}" target="_blank" rel="noreferrer">${text}</a>`);
+      links.push(
+        `<a href="${href}" target="_blank" rel="noreferrer">${text}</a>`,
+      );
       return token;
     })
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
+    .replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noreferrer">$1</a>',
+    );
   links.forEach((link, index) => {
     html = html.replace(`@@LINK_${index}@@`, link);
   });
@@ -317,13 +390,16 @@ function renderInlineMarkdown(value) {
 }
 
 function stripFrontMatter(markdown) {
-  return String(markdown || "").replace(/^---\n[\s\S]*?\n---\n?/, "").trim();
+  return String(markdown || "")
+    .replace(/^---\n[\s\S]*?\n---\n?/, "")
+    .trim();
 }
 
 function flushList(html, listItems) {
   if (!listItems.length) return;
   html.push("<ul>");
-  for (const item of listItems) html.push(`<li>${renderInlineMarkdown(item)}</li>`);
+  for (const item of listItems)
+    html.push(`<li>${renderInlineMarkdown(item)}</li>`);
   html.push("</ul>");
   listItems.length = 0;
 }
@@ -358,7 +434,17 @@ function renderMarkdownPreview(markdown) {
     if (heading) {
       flushList(html, listItems);
       flushParagraph();
-      html.push(`<h${heading[1].length}>${renderInlineMarkdown(heading[2])}</h${heading[1].length}>`);
+      html.push(
+        `<h${heading[1].length}>${renderInlineMarkdown(heading[2])}</h${heading[1].length}>`,
+      );
+      continue;
+    }
+
+    const quote = line.match(/^>\s?(.*)$/);
+    if (quote) {
+      flushList(html, listItems);
+      flushParagraph();
+      html.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
       continue;
     }
 
@@ -395,7 +481,9 @@ function createPostCard(post) {
   if (post.date) {
     try {
       dateEl.textContent = new Intl.DateTimeFormat("en", {
-        month: "short", day: "numeric", year: "numeric",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       }).format(new Date(`${post.date}T00:00:00`));
     } catch {
       dateEl.textContent = post.date;
@@ -416,7 +504,9 @@ function createPostCard(post) {
 
   const tagRow = clone.querySelector(".tag-row");
   if (post.tags && post.tags.length) {
-    tagRow.innerHTML = post.tags.map((t) => `<span class="tag">${t}</span>`).join("");
+    tagRow.innerHTML = post.tags
+      .map((t) => `<span class="tag">${t}</span>`)
+      .join("");
   }
 
   const statusEl = clone.querySelector(".status");
@@ -452,14 +542,16 @@ function createPostCard(post) {
 
 function renderPosts() {
   const fragment = document.createDocumentFragment();
-  const filtered = currentFilter === "all"
-    ? allPosts
-    : allPosts.filter((p) => p.status === currentFilter);
+  const filtered =
+    currentFilter === "all"
+      ? allPosts
+      : allPosts.filter((p) => p.status === currentFilter);
 
   if (filtered.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty-state";
-    empty.textContent = "No posts yet. Click New Post to create your first idea.";
+    empty.textContent =
+      "No posts yet. Click New Post to create your first idea.";
     fragment.appendChild(empty);
   } else {
     for (const post of filtered) {
@@ -473,12 +565,23 @@ function renderPosts() {
 
 function optionHtml(items, emptyLabel) {
   if (!items.length) return `<option value="">${emptyLabel}</option>`;
-  return items.map((item) => `<option value="${item.slug}">${item.title || item.name || item.slug}</option>`).join("");
+  return items
+    .map(
+      (item) =>
+        `<option value="${item.slug}">${item.title || item.name || item.slug}</option>`,
+    )
+    .join("");
 }
 
 function renderGrowthOptions() {
-  const businessOptions = optionHtml(growthItems.businesses || [], "Create a business first");
-  const trendOptions = optionHtml(growthItems.trends || [], "Save a trend first");
+  const businessOptions = optionHtml(
+    growthItems.businesses || [],
+    "Create a business first",
+  );
+  const trendOptions = optionHtml(
+    growthItems.trends || [],
+    "Save a trend first",
+  );
   const leadOptions = `<option value="">No specific lead</option>${optionHtml(growthItems.leads || [], "No leads found")}`;
   if (knowledgeBusiness) knowledgeBusiness.innerHTML = businessOptions;
   if (campaignBusiness) campaignBusiness.innerHTML = businessOptions;
@@ -494,18 +597,25 @@ function renderCampaigns() {
     return;
   }
 
-  campaignGrid.innerHTML = campaigns.map((campaign) => {
-    const slug = campaign.slug;
-    const briefPath = `/content/briefs/${slug}.md`;
-    const storyboardPath = `/content/storyboards/${slug}.md`;
-    const videoPath = `/content/video-specs/${slug}.md`;
-    const campaignPath = campaign.web_path;
-    const promise = campaign.campaign_promise || "Campaign generated from selected business, trend, and available knowledge.";
-    const asset = campaign.primary_asset || "Campaign brief and follow-up plan";
-    const audience = campaign.audience || campaign.goal || "Target audience";
-    const targetLead = campaign.target_lead || "No specific lead attached";
-    const canPay = campaign.price && campaign.payment_address && /avalanche|usdc|avax/i.test(campaign.payment_method || "");
-    return `
+  campaignGrid.innerHTML = campaigns
+    .map((campaign) => {
+      const slug = campaign.slug;
+      const briefPath = `/content/briefs/${slug}.md`;
+      const storyboardPath = `/content/storyboards/${slug}.md`;
+      const videoPath = `/content/video-specs/${slug}.md`;
+      const campaignPath = campaign.web_path;
+      const promise =
+        campaign.campaign_promise ||
+        "Campaign generated from selected business, trend, and available knowledge.";
+      const asset =
+        campaign.primary_asset || "Campaign brief and follow-up plan";
+      const audience = campaign.audience || campaign.goal || "Target audience";
+      const targetLead = campaign.target_lead || "No specific lead attached";
+      const canPay =
+        campaign.price &&
+        campaign.payment_address &&
+        /avalanche|usdc|avax/i.test(campaign.payment_method || "");
+      return `
       <article class="post-card campaign-card">
         <div class="post-meta">
           <span>${safeText(campaign.channel || "Channel")}</span>
@@ -531,16 +641,22 @@ function renderCampaigns() {
         </div>
       </article>
     `;
-  }).join("");
+    })
+    .join("");
 
   campaignGrid.querySelectorAll("[data-open-md]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      openEditor({ web_path: btn.dataset.openMd, label: btn.dataset.openLabel });
+      openEditor({
+        web_path: btn.dataset.openMd,
+        label: btn.dataset.openLabel,
+      });
     });
   });
   campaignGrid.querySelectorAll("[data-pay-slug]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const campaign = campaigns.find((item) => item.slug === btn.dataset.paySlug);
+      const campaign = campaigns.find(
+        (item) => item.slug === btn.dataset.paySlug,
+      );
       openPaymentPanel(campaign);
     });
   });
@@ -552,10 +668,15 @@ function normalizeAddress(value) {
 }
 
 function parseTokenAmount(value, decimals = 6) {
-  const [wholeRaw, fractionRaw = ""] = String(value || "0").trim().split(".");
+  const [wholeRaw, fractionRaw = ""] = String(value || "0")
+    .trim()
+    .split(".");
   const whole = wholeRaw.replace(/\D/g, "") || "0";
-  const fraction = fractionRaw.replace(/\D/g, "").slice(0, decimals).padEnd(decimals, "0");
-  return BigInt(whole) * (10n ** BigInt(decimals)) + BigInt(fraction || "0");
+  const fraction = fractionRaw
+    .replace(/\D/g, "")
+    .slice(0, decimals)
+    .padEnd(decimals, "0");
+  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction || "0");
 }
 
 function toHex(value) {
@@ -579,13 +700,15 @@ async function switchToFuji() {
     if (err.code !== 4902) throw err;
     await window.ethereum.request({
       method: "wallet_addEthereumChain",
-      params: [{
-        chainId: FUJI_CHAIN_ID,
-        chainName: "Avalanche Fuji Testnet",
-        nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
-        rpcUrls: ["https://api.avax-test.network/ext/bc/C/rpc"],
-        blockExplorerUrls: [FUJI_EXPLORER],
-      }],
+      params: [
+        {
+          chainId: FUJI_CHAIN_ID,
+          chainName: "Avalanche Fuji Testnet",
+          nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+          rpcUrls: ["https://api.avax-test.network/ext/bc/C/rpc"],
+          blockExplorerUrls: [FUJI_EXPLORER],
+        },
+      ],
     });
   }
 }
@@ -596,7 +719,9 @@ function openPaymentPanel(campaign) {
   const token = normalizeAddress(campaign.payment_token);
   const recipient = normalizeAddress(campaign.payment_address);
   const currency = campaign.currency || "USDC";
-  const needsToken = /usdc|erc-20|token/i.test(`${campaign.payment_method || ""} ${currency}`);
+  const needsToken = /usdc|erc-20|token/i.test(
+    `${campaign.payment_method || ""} ${currency}`,
+  );
   paymentTitle.textContent = `Pay ${campaign.title}`;
   paymentDetails.textContent = "Avalanche Fuji testnet";
   paymentSummary.innerHTML = `
@@ -607,14 +732,22 @@ function openPaymentPanel(campaign) {
       <div><dt>Use</dt><dd>${safeText(campaign.campaign_promise || "Campaign payment or bounty reward")}</dd></div>
     </dl>
   `;
-  setPaymentStatus(recipient ? "Ready to connect wallet." : "Add a valid Avalanche C-Chain payment address first.", !recipient);
+  setPaymentStatus(
+    recipient
+      ? "Ready to connect wallet."
+      : "Add a valid Avalanche C-Chain payment address first.",
+    !recipient,
+  );
   paymentPanel.hidden = false;
 }
 
 async function sendActivePayment() {
   if (!activePayment) return;
   if (!window.ethereum) {
-    setPaymentStatus("No injected wallet found. Install Core or MetaMask.", true);
+    setPaymentStatus(
+      "No injected wallet found. Install Core or MetaMask.",
+      true,
+    );
     return;
   }
 
@@ -622,7 +755,9 @@ async function sendActivePayment() {
   const token = normalizeAddress(activePayment.payment_token);
   const price = String(activePayment.price || "").trim();
   const currency = String(activePayment.currency || "USDC").trim();
-  const needsToken = /usdc|erc-20|token/i.test(`${activePayment.payment_method || ""} ${currency}`);
+  const needsToken = /usdc|erc-20|token/i.test(
+    `${activePayment.payment_method || ""} ${currency}`,
+  );
 
   if (!recipient) {
     setPaymentStatus("Payment address must be a valid 0x address.", true);
@@ -633,13 +768,18 @@ async function sendActivePayment() {
     return;
   }
   if (needsToken && !token) {
-    setPaymentStatus("USDC payments need a Fuji ERC-20 token contract address.", true);
+    setPaymentStatus(
+      "USDC payments need a Fuji ERC-20 token contract address.",
+      true,
+    );
     return;
   }
 
   try {
     setPaymentStatus("Connecting wallet...");
-    const [from] = await window.ethereum.request({ method: "eth_requestAccounts" });
+    const [from] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
     await switchToFuji();
 
     setPaymentStatus("Waiting for wallet confirmation...");
@@ -647,25 +787,32 @@ async function sendActivePayment() {
     if (token) {
       txHash = await window.ethereum.request({
         method: "eth_sendTransaction",
-        params: [{
-          from,
-          to: token,
-          data: erc20TransferData(recipient, parseTokenAmount(price, 6)),
-        }],
+        params: [
+          {
+            from,
+            to: token,
+            data: erc20TransferData(recipient, parseTokenAmount(price, 6)),
+          },
+        ],
       });
     } else {
       txHash = await window.ethereum.request({
         method: "eth_sendTransaction",
-        params: [{
-          from,
-          to: recipient,
-          value: toHex(parseTokenAmount(price, 18)),
-        }],
+        params: [
+          {
+            from,
+            to: recipient,
+            value: toHex(parseTokenAmount(price, 18)),
+          },
+        ],
       });
     }
 
     setPaymentStatus(`Sent. Tx: ${txHash}`);
-    paymentSummary.insertAdjacentHTML("beforeend", `<p class="tx-link"><a href="${FUJI_EXPLORER}/tx/${txHash}" target="_blank" rel="noreferrer">View transaction</a></p>`);
+    paymentSummary.insertAdjacentHTML(
+      "beforeend",
+      `<p class="tx-link"><a href="${FUJI_EXPLORER}/tx/${txHash}" target="_blank" rel="noreferrer">View transaction</a></p>`,
+    );
   } catch (err) {
     setPaymentStatus(err.message || "Payment failed.", true);
   }
@@ -674,11 +821,35 @@ async function sendActivePayment() {
 function renderLeadProviderStatus() {
   const el = document.getElementById("lead-provider-status");
   if (!el) return;
-  const provider = leadProviderInfo.active_provider || "demo-fallback";
-  const details = provider === "demo-fallback"
-    ? "Live keys not visible to the server. Add SERPAPI_KEY or APIFY_TOKEN + APIFY_ACTOR_ID, then restart."
-    : `Live provider active: ${provider}.`;
-  el.textContent = details;
+
+  const provider = leadProviderInfo.active_provider;
+  const hasProvider = leadProviderInfo.has_provider;
+  const error = leadProviderInfo.error;
+
+  // If there's an error (no provider configured), show it in red
+  if (error) {
+    el.textContent = error;
+    el.className = "form-note error-text";
+    return;
+  }
+
+  // If no provider is configured (shouldn't happen if error is set, but fallback)
+  if (!provider) {
+    el.textContent =
+      "No lead provider configured. Add SERPAPI_KEY, APIFY_TOKEN + APIFY_ACTOR_ID, or OUTSCRAPER_API_KEY, then restart.";
+    el.className = "form-note error-text";
+    return;
+  }
+
+  // Provider is active - show which one and indicate it's live
+  const providerLabels = {
+    "serpapi-google-maps": "SerpAPI (Google Maps)",
+    "apify-google-maps": "Apify (Google Maps)",
+    outscraper: "Outscraper",
+  };
+  const label = providerLabels[provider] || provider;
+  el.textContent = `Live provider active: ${label}.`;
+  el.className = "form-note success-text";
 }
 
 async function previewLeadSignals() {
@@ -689,7 +860,9 @@ async function previewLeadSignals() {
     return;
   }
 
-  const signals = await fetchAPI(`/api/leads/signals?business_type=${encodeURIComponent(businessType)}`);
+  const signals = await fetchAPI(
+    `/api/leads/signals?business_type=${encodeURIComponent(businessType)}`,
+  );
   leadSignalPreview.innerHTML = `
     <article class="signal-item">
       <strong>Market signals for ${businessType}</strong>
@@ -699,44 +872,179 @@ async function previewLeadSignals() {
   `;
 }
 
+function leadStatusLabel(status) {
+  const text = String(status || "new");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function contactChip(label, value, href) {
+  if (!value) {
+    return `<span class="contact-chip missing">${label} needed</span>`;
+  }
+  const inner = href
+    ? `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${safeText(value)}</a>`
+    : safeText(value);
+  return `<span class="contact-chip" title="${safeText(value)}">${inner}</span>`;
+}
+
+function renderLeadFilters(leads) {
+  const bar = document.getElementById("lead-filter-bar");
+  if (!bar) return;
+
+  const counts = {};
+  for (const lead of leads) {
+    const status = String(lead.status || "new").toLowerCase();
+    counts[status] = (counts[status] || 0) + 1;
+  }
+
+  bar.innerHTML = ["all", ...LEAD_STATUSES]
+    .map((status) => {
+      const count = status === "all" ? leads.length : counts[status] || 0;
+      if (status !== "all" && !count) return "";
+      const active = leadFilter === status ? " active" : "";
+      const label = status === "all" ? "All" : leadStatusLabel(status);
+      return `<button class="filter-btn${active}" data-lead-filter="${status}">${label} · ${count}</button>`;
+    })
+    .join("");
+
+  bar.querySelectorAll("[data-lead-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      leadFilter = btn.dataset.leadFilter;
+      renderLeads();
+    });
+  });
+}
+
+async function changeLeadStatus(slug, status) {
+  setStatus("lead-status", "Updating lead status...");
+  const result = await fetchAPI("/api/leads/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug, status }),
+  });
+
+  if (!result.success) {
+    setStatus("lead-status", result.error || "Could not update status.", true);
+    renderLeads();
+    return;
+  }
+
+  const lead = (leadItems.leads || []).find((item) => item.slug === slug);
+  if (lead) lead.status = result.status;
+  setStatus("lead-status", `Lead marked as ${result.status}.`);
+  renderLeads();
+}
+
+async function copyOutreachEmail(path, title) {
+  const data = await fetchAPI(`/api/file?path=${encodeURIComponent(path)}`);
+  if (!data.success) {
+    setStatus(
+      "lead-status",
+      data.error || "Could not load the outreach draft.",
+      true,
+    );
+    return;
+  }
+
+  const text = stripFrontMatter(data.content || "");
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus("lead-status", `Outreach draft for ${title} copied to clipboard.`);
+  } catch {
+    setStatus(
+      "lead-status",
+      "Clipboard unavailable. Open Outreach and copy manually.",
+      true,
+    );
+  }
+}
+
 function renderLeads() {
   if (!leadGrid) return;
   const leads = leadItems.leads || [];
+  renderLeadFilters(leads);
+
   if (!leads.length) {
     leadGrid.innerHTML = `<p class="empty-state">No leads yet. Search by business type, city, and your offer.</p>`;
     return;
   }
 
-  leadGrid.innerHTML = leads.map((lead) => {
-    const outreach = (leadItems.outreach || []).find((item) => item.lead === lead.slug);
-    return `
-      <article class="post-card">
+  const filtered =
+    leadFilter === "all"
+      ? leads
+      : leads.filter(
+          (lead) => String(lead.status || "new").toLowerCase() === leadFilter,
+        );
+
+  if (!filtered.length) {
+    leadGrid.innerHTML = `<p class="empty-state">No leads with status "${leadStatusLabel(leadFilter)}" yet.</p>`;
+    return;
+  }
+
+  leadGrid.innerHTML = filtered
+    .map((lead) => {
+      const outreach = (leadItems.outreach || []).find(
+        (item) => item.lead === lead.slug,
+      );
+      const outreachPath =
+        outreach?.web_path || `/content/outreach/${lead.slug}.md`;
+      const status = String(lead.status || "new").toLowerCase();
+      const statusClass = status.replace(/\s+/g, "-");
+      const statusOptions = LEAD_STATUSES.map(
+        (option) =>
+          `<option value="${option}"${option === status ? " selected" : ""}>${leadStatusLabel(option)}</option>`,
+      ).join("");
+      const score = Math.max(
+        0,
+        Math.min(5, Number(lead.undiscovered_score || 0)),
+      );
+      return `
+      <article class="post-card lead-card">
         <div class="post-meta">
-          <span>${lead.city || "City"}</span>
-          <span>${lead.business_type || "Business"}</span>
+          <span>${safeText(lead.city || "City")}</span>
+          <span>${safeText(lead.business_type || "Business")}</span>
+          <span class="lead-score" title="Undiscovered score: real demand signals with weak public contact data">${"●".repeat(score)}${"○".repeat(5 - score)} ${score}/5</span>
         </div>
-        <h3><a class="post-title-link" href="${lead.web_path}" target="_blank">${lead.title}</a></h3>
-        <p class="post-summary">Undiscovered score ${lead.undiscovered_score || "-"}/5 · Rating ${lead.rating || "?"} · Reviews ${lead.reviews || "?"}${lead.gps ? ` · GPS ${lead.gps}` : ""}</p>
-        <div class="tag-row">
-          <span class="tag">${lead.status || "new"}</span>
-          <span class="tag">${lead.email ? "email found" : "email needed"}</span>
-          <span class="tag">${lead.website ? "website found" : "website needed"}</span>
+        <h3><button class="link-button post-title-link" data-open-md="${lead.web_path}" data-open-label="Lead">${safeText(lead.title)}</button></h3>
+        <p class="post-summary">Rating ${safeText(lead.rating || "?")} · ${safeText(lead.reviews || "?")} reviews${lead.address ? ` · ${safeText(lead.address)}` : ""}</p>
+        <div class="lead-contacts">
+          ${contactChip("Phone", lead.phone, lead.phone ? `tel:${lead.phone}` : "")}
+          ${contactChip("Email", lead.email, lead.email ? `mailto:${lead.email}` : "")}
+          ${contactChip("Website", lead.website, lead.website)}
         </div>
         <div class="post-actions">
-          <span class="status ready">${lead.status || "new"}</span>
+          <label class="lead-status-control">
+            Status
+            <select class="lead-status-select status-${statusClass}" data-lead-slug="${lead.slug}" aria-label="Lead status for ${safeText(lead.title)}">${statusOptions}</select>
+          </label>
           <div class="action-buttons">
-            <button class="action-btn action-open" data-open-md="${lead.web_path}" data-open-label="Lead">Lead</button>
-            <button class="action-btn action-open" data-open-md="${outreach?.web_path || `/content/outreach/${lead.slug}.md`}" data-open-label="Outreach">Outreach</button>
+            <button class="action-btn action-open" data-open-md="${lead.web_path}" data-open-label="Lead">Lead Brief</button>
+            <button class="action-btn action-open" data-open-md="${outreachPath}" data-open-label="Outreach">Outreach</button>
+            <button class="action-btn action-copy" data-copy-outreach="${outreachPath}" data-copy-title="${safeText(lead.title)}">Copy Email</button>
           </div>
         </div>
       </article>
     `;
-  }).join("");
+    })
+    .join("");
 
   leadGrid.querySelectorAll("[data-open-md]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      openEditor({ web_path: btn.dataset.openMd, label: btn.dataset.openLabel });
+      openEditor({
+        web_path: btn.dataset.openMd,
+        label: btn.dataset.openLabel,
+      });
     });
+  });
+  leadGrid.querySelectorAll(".lead-status-select").forEach((select) => {
+    select.addEventListener("change", () =>
+      changeLeadStatus(select.dataset.leadSlug, select.value),
+    );
+  });
+  leadGrid.querySelectorAll("[data-copy-outreach]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      copyOutreachEmail(btn.dataset.copyOutreach, btn.dataset.copyTitle),
+    );
   });
 }
 
@@ -746,7 +1054,10 @@ function fillTrendForm(signal) {
   trendForm.elements.source.value = signal.source || "manual";
   trendForm.elements.url.value = signal.url || "";
   trendForm.elements.text.value = signal.text || signal.title || "";
-  setStatus("trend-status", "Signal copied into trend form. Review it, then save.");
+  setStatus(
+    "trend-status",
+    "Signal copied into trend form. Review it, then save.",
+  );
 }
 
 function renderSignals(signals = []) {
@@ -756,17 +1067,24 @@ function renderSignals(signals = []) {
     return;
   }
 
-  signalList.innerHTML = signals.slice(0, 8).map((signal, index) => `
+  signalList.innerHTML = signals
+    .slice(0, 8)
+    .map(
+      (signal, index) => `
     <article class="signal-item">
       <strong>${signal.title}</strong>
       <span>${signal.source}${signal.publishedAt ? ` · ${signal.publishedAt.slice(0, 10)}` : ""}</span>
       <p>${(signal.text || "").slice(0, 180)}</p>
       <button type="button" class="action-btn action-open" data-signal-index="${index}">Use Signal</button>
     </article>
-  `).join("");
+  `,
+    )
+    .join("");
 
   signalList.querySelectorAll("[data-signal-index]").forEach((btn) => {
-    btn.addEventListener("click", () => fillTrendForm(signals[Number(btn.dataset.signalIndex)]));
+    btn.addEventListener("click", () =>
+      fillTrendForm(signals[Number(btn.dataset.signalIndex)]),
+    );
   });
 }
 
@@ -776,7 +1094,11 @@ async function fetchSignals() {
   const looksLikeUrl = /^https?:\/\//i.test(query.trim());
 
   if (looksLikeUrl && source !== "rss" && source !== "webpage") {
-    setStatus("signal-status", "For website URLs, choose Website page. Use GDELT for search terms like 'Kenya blockchain SME payments'.", true);
+    setStatus(
+      "signal-status",
+      "For website URLs, choose Website page. Use GDELT for search terms like 'Kenya blockchain SME payments'.",
+      true,
+    );
     renderSignals([]);
     return;
   }
@@ -788,7 +1110,11 @@ async function fetchSignals() {
   setStatus("signal-status", "Fetching signals...");
   const result = await fetchAPI(`/api/growth/signals?${params.toString()}`);
   if (!result.success) {
-    setStatus("signal-status", result.error || "Could not fetch signals.", true);
+    setStatus(
+      "signal-status",
+      result.error || "Could not fetch signals.",
+      true,
+    );
     renderSignals([]);
     return;
   }
@@ -799,7 +1125,9 @@ async function fetchSignals() {
 
 document.querySelectorAll(".filter-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+    document
+      .querySelectorAll(".filter-btn")
+      .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentFilter = btn.dataset.filter;
     renderPosts();
@@ -832,31 +1160,56 @@ document.getElementById("close-payment-btn")?.addEventListener("click", () => {
 
 sendPaymentBtn?.addEventListener("click", sendActivePayment);
 
-document.getElementById("save-editor-btn").addEventListener("click", async () => {
-  if (!activeEditorPath) return;
-  setEditorStatus("Saving...");
+document
+  .getElementById("save-editor-btn")
+  .addEventListener("click", async () => {
+    if (!activeEditorPath) return;
+    setEditorStatus("Saving...");
 
-  const result = await fetchAPI("/api/file", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      path: activeEditorPath,
-      content: editorContent.value,
-    }),
+    const result = await fetchAPI("/api/file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: activeEditorPath,
+        content: editorContent.value,
+      }),
+    });
+
+    if (!result.success) {
+      setEditorStatus(result.error || "Could not save file.", true);
+      return;
+    }
+
+    setEditorStatus("Saved. Run the next workflow step from the card.");
+    await loadPosts();
   });
 
-  if (!result.success) {
-    setEditorStatus(result.error || "Could not save file.", true);
-    return;
-  }
-
-  setEditorStatus("Saved. Run the next workflow step from the card.");
-  await loadPosts();
-});
+function updateEditorMeta() {
+  const editorMeta = document.getElementById("editor-meta");
+  if (!editorMeta || !editorContent) return;
+  const body = stripFrontMatter(editorContent.value);
+  const words = body ? body.split(/\s+/).filter(Boolean).length : 0;
+  editorMeta.textContent = `${words} word${words === 1 ? "" : "s"} · ${editorContent.value.length} characters`;
+}
 
 if (editorContent) {
-  editorContent.addEventListener("input", () => renderMarkdownPreview(editorContent.value));
+  editorContent.addEventListener("input", () => {
+    renderMarkdownPreview(editorContent.value);
+    updateEditorMeta();
+  });
 }
+
+document
+  .getElementById("copy-editor-btn")
+  ?.addEventListener("click", async () => {
+    if (!editorContent) return;
+    try {
+      await navigator.clipboard.writeText(editorContent.value);
+      setEditorStatus("Markdown copied to clipboard.");
+    } catch {
+      setEditorStatus("Clipboard unavailable in this browser context.", true);
+    }
+  });
 
 newPostForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -879,8 +1232,12 @@ newPostForm.addEventListener("submit", async (event) => {
   setComposerStatus("Saved to content/ideas/.");
   newPostForm.reset();
   currentFilter = "all";
-  document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelector(".filter-btn[data-filter='all']").classList.add("active");
+  document
+    .querySelectorAll(".filter-btn")
+    .forEach((b) => b.classList.remove("active"));
+  document
+    .querySelector(".filter-btn[data-filter='all']")
+    .classList.add("active");
   await loadPosts();
 });
 
@@ -907,51 +1264,93 @@ async function submitGrowthForm(form, endpoint, statusId, successMessage) {
 
 async function submitLeadSearch(event) {
   event.preventDefault();
+  const submitBtn = leadSearchForm.querySelector("button[type='submit']");
   const formData = new FormData(leadSearchForm);
   const payload = Object.fromEntries(formData.entries());
-  setStatus("lead-status", "Finding leads...");
 
-  const result = await fetchAPI("/api/leads/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!result.success) {
-    setStatus("lead-status", result.error || "Could not find leads.", true);
-    return;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Finding Leads...";
   }
+  setStatus(
+    "lead-status",
+    "Contacting the lead provider and building personalized briefs. This can take a moment...",
+  );
 
-  setStatus("lead-status", `${result.leads.length} lead(s) saved. Provider: ${result.provider}.`);
-  leadSearchForm.reset();
-  await loadLeads();
+  try {
+    const result = await fetchAPI("/api/leads/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!result.success) {
+      setStatus("lead-status", result.error || "Could not find leads.", true);
+      return;
+    }
+
+    setStatus(
+      "lead-status",
+      `${result.leads.length} lead(s) saved via ${result.provider}. Each has a brief and an outreach draft in the Lead CRM below.`,
+    );
+    leadFilter = "all";
+    await loadLeads();
+    document
+      .getElementById("lead-results")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Find Leads";
+    }
+  }
 }
 
 if (businessForm) {
   businessForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitGrowthForm(businessForm, "/api/growth/businesses", "business-status", "Business saved.");
+    submitGrowthForm(
+      businessForm,
+      "/api/growth/businesses",
+      "business-status",
+      "Business saved.",
+    );
   });
 }
 
 if (knowledgeForm) {
   knowledgeForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitGrowthForm(knowledgeForm, "/api/growth/knowledge", "knowledge-status", "Knowledge added.");
+    submitGrowthForm(
+      knowledgeForm,
+      "/api/growth/knowledge",
+      "knowledge-status",
+      "Knowledge added.",
+    );
   });
 }
 
 if (trendForm) {
   trendForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitGrowthForm(trendForm, "/api/growth/trends", "trend-status", "Trend saved.");
+    submitGrowthForm(
+      trendForm,
+      "/api/growth/trends",
+      "trend-status",
+      "Trend saved.",
+    );
   });
 }
 
 if (campaignForm) {
   campaignForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitGrowthForm(campaignForm, "/api/growth/campaigns", "campaign-status", "Campaign generated.");
+    submitGrowthForm(
+      campaignForm,
+      "/api/growth/campaigns",
+      "campaign-status",
+      "Campaign generated.",
+    );
   });
 }
 

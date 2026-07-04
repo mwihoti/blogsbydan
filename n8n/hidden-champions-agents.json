@@ -58,7 +58,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://172.22.0.1:3030/api/leads/discover",
+        "url": "https://blogsbydan.onrender.com/api/leads/discover",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ business_type: $json.business_type, city: $json.city, offer: $json.offer, limit: 5 }) }}",

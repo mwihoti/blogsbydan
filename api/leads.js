@@ -1,9 +1,13 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getBusinessSignals } from "../data/business-signals.js";
-import { parseFrontMatter, stringifyFrontMatter } from "../scripts/frontmatter.js";
+import {
+  parseFrontMatter,
+  stringifyFrontMatter,
+} from "../scripts/frontmatter.js";
 import { searchApifyMaps } from "../sources/apify.js";
 import { searchSerpApiMaps } from "../sources/serpapi.js";
+import { searchOutscraperMaps } from "../sources/outscraper.js";
 
 const CONTENT_DIR = join(import.meta.dirname, "..", "content");
 
@@ -14,13 +18,15 @@ const DIRS = {
 };
 
 function slugify(value, fallback = "lead") {
-  return String(value || fallback)
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 90) || fallback;
+  return (
+    String(value || fallback)
+      .toLowerCase()
+      .trim()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 90) || fallback
+  );
 }
 
 function today() {
@@ -36,8 +42,9 @@ function envValue(...names) {
 
 // Trigger the n8n "Hidden Champions" pipeline (Verify -> Judge -> Humanize).
 // Fire-and-forget: n8n failures never block lead generation.
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL
-  || "http://localhost:5678/webhook/hidden-champions";
+const N8N_WEBHOOK_URL =
+  process.env.N8N_WEBHOOK_URL ||
+  "http://localhost:5678/webhook/hidden-champions";
 
 async function sendToN8n(payload) {
   try {
@@ -55,7 +62,9 @@ async function sendToN8n(payload) {
 }
 
 async function ensureDirs() {
-  await Promise.all(Object.values(DIRS).map((dir) => mkdir(dir, { recursive: true })));
+  await Promise.all(
+    Object.values(DIRS).map((dir) => mkdir(dir, { recursive: true })),
+  );
 }
 
 async function listMarkdown(dir, type) {
@@ -83,7 +92,9 @@ async function listMarkdown(dir, type) {
       web_path: `/content/${type}/${file.name}`,
     });
   }
-  return items.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  return items.sort((a, b) =>
+    String(b.created_at || "").localeCompare(String(a.created_at || "")),
+  );
 }
 
 export function inferProblems(businessType, offer) {
@@ -129,23 +140,39 @@ export function inferProblems(businessType, offer) {
 function demoBusinesses(businessType, city) {
   const type = businessType || "SME";
   const place = city || "Nairobi";
-  const areas = ["CBD", "Westlands", "Kilimani", "Karen", "Industrial Area", "Lavington", "Parklands", "Upper Hill", "Ngong Road", "Ruiru"];
+  const areas = [
+    "CBD",
+    "Westlands",
+    "Kilimani",
+    "Karen",
+    "Industrial Area",
+    "Lavington",
+    "Parklands",
+    "Upper Hill",
+    "Ngong Road",
+    "Ruiru",
+  ];
   return areas.map((area, index) => ({
-    name: index % 3 === 0
-      ? `${place} ${type} Hub ${area}`
-      : index % 3 === 1
-        ? `Prime ${type} Services ${area}`
-        : `Family ${type} Centre ${area}`,
-    rating: String((4.1 + ((index % 6) * 0.1)).toFixed(1)),
-    reviews: String(28 + (index * 11)),
+    name:
+      index % 3 === 0
+        ? `${place} ${type} Hub ${area}`
+        : index % 3 === 1
+          ? `Prime ${type} Services ${area}`
+          : `Family ${type} Centre ${area}`,
+    rating: String((4.1 + (index % 6) * 0.1).toFixed(1)),
+    reviews: String(28 + index * 11),
     address: `${place} ${area}`,
     phone: "",
     email: "",
     website: "",
-    socials: index % 2 === 0 ? "Google Maps profile likely; website/socials need enrichment" : "LinkedIn/Instagram search recommended",
-    discovery_signal: index % 2 === 0
-      ? "Good review count but weak public contact data"
-      : "High customer signal, lower ecosystem visibility",
+    socials:
+      index % 2 === 0
+        ? "Google Maps profile likely; website/socials need enrichment"
+        : "LinkedIn/Instagram search recommended",
+    discovery_signal:
+      index % 2 === 0
+        ? "Good review count but weak public contact data"
+        : "High customer signal, lower ecosystem visibility",
   }));
   /*
   return [
@@ -215,13 +242,20 @@ function leadEvidence(lead) {
   return evidence;
 }
 
-function inferLeadOpportunity({ lead, businessType, offer, problems, signals }) {
+function inferLeadOpportunity({
+  lead,
+  businessType,
+  offer,
+  problems,
+  signals,
+}) {
   const reviewCount = Number(lead.reviews || 0);
   const hasWebsite = Boolean(lead.website);
   const hasContactGap = !lead.email || !lead.phone;
   const hasStrongDemand = reviewCount >= 40 || Number(lead.rating || 0) >= 4.5;
   const primaryTrend = signals.trends[0] || "customer trust";
-  const primaryProblem = problems[0] || "customers need clearer answers before they inquire";
+  const primaryProblem =
+    problems[0] || "customers need clearer answers before they inquire";
 
   if (hasStrongDemand && hasContactGap) {
     return {
@@ -241,7 +275,8 @@ function inferLeadOpportunity({ lead, businessType, offer, problems, signals }) 
 
   if (!hasWebsite) {
     return {
-      angle: "build a simple proof-and-inquiry asset around public trust signals",
+      angle:
+        "build a simple proof-and-inquiry asset around public trust signals",
       insight: `${lead.name} appears in discovery results without a clear website signal. The offer should start with a lightweight page or campaign asset, not a large rebuild.`,
       leadMagnet: `A quick profile-to-lead page using reviews, location, and ${primaryTrend}`,
     };
@@ -254,24 +289,48 @@ function inferLeadOpportunity({ lead, businessType, offer, problems, signals }) 
   };
 }
 
-export function buildLeadBrief({ lead, businessType, city, offer, problems, signals }) {
+export function buildLeadBrief({
+  lead,
+  businessType,
+  city,
+  offer,
+  problems,
+  signals,
+}) {
   const score = leadScore(lead);
   const evidence = leadEvidence(lead);
   const problemList = problems.map((problem) => `- ${problem}`).join("\n");
-  const trendList = signals.trends.map((trend) => `- ${trend}`).join("\n") || "- No saved market signals yet.";
-  const angleList = signals.angles.map((angle) => `- ${angle}`).join("\n") || "- Turn visible customer questions into content and follow-up.";
+  const trendList =
+    signals.trends.map((trend) => `- ${trend}`).join("\n") ||
+    "- No saved market signals yet.";
+  const angleList =
+    signals.angles.map((angle) => `- ${angle}`).join("\n") ||
+    "- Turn visible customer questions into content and follow-up.";
   const primaryTrend = signals.trends[0] || "customer trust";
-  const primaryAngle = signals.angles[0] || "turn repeated customer questions into lead-generating content";
-  const opportunity = inferLeadOpportunity({ lead, businessType, offer, problems, signals });
-  const evidenceList = evidence.map((item) => `- ${item}`).join("\n") || "- Only basic name, city, and category were found.";
+  const primaryAngle =
+    signals.angles[0] ||
+    "turn repeated customer questions into lead-generating content";
+  const opportunity = inferLeadOpportunity({
+    lead,
+    businessType,
+    offer,
+    problems,
+    signals,
+  });
+  const evidenceList =
+    evidence.map((item) => `- ${item}`).join("\n") ||
+    "- Only basic name, city, and category were found.";
   const opener = evidence.length
     ? `I noticed ${evidence.slice(0, 2).join(" and ")} for ${lead.name}.`
     : `I found ${lead.name} while researching ${businessType} in ${city}.`;
-  const contactGap = [
-    lead.website ? "" : "website",
-    lead.email ? "" : "email",
-    lead.phone ? "" : "phone",
-  ].filter(Boolean).join(", ") || "no obvious contact gap";
+  const contactGap =
+    [
+      lead.website ? "" : "website",
+      lead.email ? "" : "email",
+      lead.phone ? "" : "phone",
+    ]
+      .filter(Boolean)
+      .join(", ") || "no obvious contact gap";
   const offerSentence = offer
     ? sentenceCase(offer)
     : "My work turns public customer signals into more leads and better follow-up.";
@@ -354,6 +413,66 @@ Hi, ${opener} There is a useful angle around ${primaryTrend}, especially "${prob
 `;
 }
 
+export const LEAD_STATUSES = [
+  "new",
+  "contacted",
+  "replied",
+  "meeting booked",
+  "won",
+  "lost",
+];
+
+export async function updateLeadStatus(input = {}) {
+  await ensureDirs();
+  const slug = slugify(String(input.slug || ""), "");
+  const status = String(input.status || "")
+    .trim()
+    .toLowerCase();
+
+  if (!slug) return { success: false, error: "Lead slug is required" };
+  if (!LEAD_STATUSES.includes(status)) {
+    return {
+      success: false,
+      error: `Status must be one of: ${LEAD_STATUSES.join(", ")}`,
+    };
+  }
+
+  const leadPath = join(DIRS.leads, `${slug}.md`);
+  let content;
+  try {
+    content = await readFile(leadPath, "utf-8");
+  } catch {
+    return { success: false, error: `Lead not found: ${slug}` };
+  }
+
+  const { data, body } = parseFrontMatter(content);
+  data.status = status;
+  data.status_updated_at = today();
+  await writeFile(
+    leadPath,
+    `${stringifyFrontMatter(data)}\n\n${body.trim()}\n`,
+    "utf-8",
+  );
+
+  // Mirror the CRM status onto the outreach draft when it exists.
+  try {
+    const outreachPath = join(DIRS.outreach, `${slug}.md`);
+    const outreachContent = await readFile(outreachPath, "utf-8");
+    const parsed = parseFrontMatter(outreachContent);
+    parsed.data.status = status;
+    parsed.data.status_updated_at = today();
+    await writeFile(
+      outreachPath,
+      `${stringifyFrontMatter(parsed.data)}\n\n${parsed.body.trim()}\n`,
+      "utf-8",
+    );
+  } catch {
+    // Outreach file is optional; the lead record is the source of truth.
+  }
+
+  return { success: true, slug, status };
+}
+
 export async function listLeadItems() {
   await ensureDirs();
   const [searches, leads, outreach] = await Promise.all([
@@ -367,51 +486,140 @@ export async function listLeadItems() {
 export function leadProviderStatus() {
   const serpApiKey = envValue("SERPAPI_KEY", "serpapi_key", "SERP_API_KEY");
   const apifyToken = envValue("APIFY_TOKEN", "apify_token");
-  const apifyActorId = envValue("APIFY_GOOGLE_MAPS_ACTOR_ID", "APIFY_ACTOR_ID", "apify_actor_id");
+  const apifyActorId = envValue(
+    "APIFY_GOOGLE_MAPS_ACTOR_ID",
+    "APIFY_ACTOR_ID",
+    "apify_actor_id",
+  );
+  const outscraperKey = envValue("OUTSCRAPER_API_KEY", "outscraper_key");
+
+  // Determine active provider with priority: SerpAPI > Apify > Outscraper
+  let active_provider = null;
+  if (serpApiKey) {
+    active_provider = "serpapi-google-maps";
+  } else if (apifyToken && apifyActorId) {
+    active_provider = "apify-google-maps";
+  } else if (outscraperKey) {
+    active_provider = "outscraper";
+  }
+
   return {
     serpapi: Boolean(serpApiKey),
     apify: Boolean(apifyToken && apifyActorId),
     apify_token: Boolean(apifyToken),
     apify_actor: Boolean(apifyActorId),
-    active_provider: serpApiKey ? "serpapi-google-maps" : apifyToken && apifyActorId ? "apify-google-maps" : "demo-fallback",
+    outscraper: Boolean(outscraperKey),
+    active_provider,
+    has_provider: active_provider !== null,
+    error:
+      active_provider === null
+        ? "No lead provider configured. Add SERPAPI_KEY, APIFY_TOKEN + APIFY_ACTOR_ID, or OUTSCRAPER_API_KEY."
+        : null,
   };
 }
 
-// Shared discovery: SerpAPI -> Apify -> deterministic demo fallback.
+// Shared discovery: SerpAPI -> Apify -> Outscraper.
+// Priority chain with error handling. No demo fallback in production.
 // No file writes, no n8n trigger — safe to call from anywhere (incl. n8n).
 async function runDiscovery(businessType, city, limit = 10) {
-  let provider = "demo-fallback";
-  let providerNote = "No live provider key was available, so deterministic demo leads were generated.";
+  let provider = null;
+  let providerNote = "";
   let baseCandidates = [];
+  const errors = [];
 
   const serpApiKey = envValue("SERPAPI_KEY", "serpapi_key", "SERP_API_KEY");
   const apifyToken = envValue("APIFY_TOKEN", "apify_token");
-  const apifyActorId = envValue("APIFY_GOOGLE_MAPS_ACTOR_ID", "APIFY_ACTOR_ID", "apify_actor_id");
+  const apifyActorId = envValue(
+    "APIFY_GOOGLE_MAPS_ACTOR_ID",
+    "APIFY_ACTOR_ID",
+    "apify_actor_id",
+  );
+  const outscraperKey = envValue("OUTSCRAPER_API_KEY", "outscraper_key");
 
+  // Check if any provider is configured
+  const hasProvider =
+    serpApiKey || (apifyToken && apifyActorId) || outscraperKey;
+  if (!hasProvider) {
+    return {
+      baseCandidates: [],
+      provider: null,
+      providerNote: "",
+      error:
+        "No lead provider configured. Add SERPAPI_KEY, APIFY_TOKEN + APIFY_ACTOR_ID, or OUTSCRAPER_API_KEY.",
+    };
+  }
+
+  // Try SerpAPI first (highest priority)
   if (serpApiKey) {
     try {
-      baseCandidates = await searchSerpApiMaps({ apiKey: serpApiKey, businessType, city, limit });
+      baseCandidates = await searchSerpApiMaps({
+        apiKey: serpApiKey,
+        businessType,
+        city,
+        limit,
+      });
       provider = "serpapi-google-maps";
-      providerNote = "Live Google Maps-style results from SerpAPI. Website contact enrichment was attempted where websites were available.";
+      providerNote =
+        "Live Google Maps-style results from SerpAPI. Website contact enrichment was attempted where websites were available.";
     } catch (err) {
+      errors.push(`SerpAPI failed: ${err.message}`);
       providerNote = `SerpAPI failed. Error: ${err.message}`;
     }
   }
 
+  // Fallback to Apify if SerpAPI didn't return results or wasn't configured
   if (!baseCandidates.length && apifyToken && apifyActorId) {
     try {
-      baseCandidates = await searchApifyMaps({ token: apifyToken, actorId: apifyActorId, businessType, city, limit });
+      baseCandidates = await searchApifyMaps({
+        token: apifyToken,
+        actorId: apifyActorId,
+        businessType,
+        city,
+        limit,
+      });
       provider = "apify-google-maps";
-      providerNote = "Live Google Maps-style results from Apify using the configured actor.";
+      providerNote =
+        "Live Google Maps-style results from Apify using the configured actor.";
+      if (errors.length) {
+        providerNote = `Fell back to Apify after: ${errors.join("; ")}. ${providerNote}`;
+      }
     } catch (err) {
-      providerNote = `${providerNote} Apify failed. Error: ${err.message}`;
+      errors.push(`Apify failed: ${err.message}`);
+      providerNote = `${providerNote}${providerNote ? " " : ""}Apify failed. Error: ${err.message}`;
     }
   }
 
+  // Fallback to Outscraper if previous providers didn't return results
+  if (!baseCandidates.length && outscraperKey) {
+    try {
+      baseCandidates = await searchOutscraperMaps({
+        apiKey: outscraperKey,
+        businessType,
+        city,
+        limit,
+      });
+      provider = "outscraper";
+      providerNote = "Live Google Maps-style results from Outscraper.";
+      if (errors.length) {
+        providerNote = `Fell back to Outscraper after: ${errors.join("; ")}. ${providerNote}`;
+      }
+    } catch (err) {
+      errors.push(`Outscraper failed: ${err.message}`);
+      providerNote = `${providerNote}${providerNote ? " " : ""}Outscraper failed. Error: ${err.message}`;
+    }
+  }
+
+  // If we have no candidates and no provider worked, return error
   if (!baseCandidates.length) {
-    baseCandidates = demoBusinesses(businessType, city).slice(0, limit);
-    provider = "demo-fallback";
-    providerNote = `${providerNote} Demo fallback leads were generated.`;
+    const errorMsg = errors.length
+      ? `All configured providers failed: ${errors.join("; ")}`
+      : "No leads found from any configured provider.";
+    return {
+      baseCandidates: [],
+      provider,
+      providerNote,
+      error: errorMsg,
+    };
   }
 
   return { baseCandidates, provider, providerNote };
@@ -424,12 +632,34 @@ export async function discoverLeads(input = {}) {
   const city = String(input.city || "").trim();
   const offer = String(input.offer || "").trim();
 
-  if (!businessType) return { success: false, error: "Business type is required" };
+  if (!businessType)
+    return { success: false, error: "Business type is required" };
   if (!city) return { success: false, error: "City is required" };
 
   const signals = getBusinessSignals(businessType);
   const problems = inferProblems(businessType, offer);
-  const { baseCandidates, provider } = await runDiscovery(businessType, city, Number(input.limit || 10));
+  const { baseCandidates, provider, providerNote, error } = await runDiscovery(
+    businessType,
+    city,
+    Number(input.limit || 10),
+  );
+
+  // If there's an error from runDiscovery (no providers configured), return it
+  if (error) {
+    return { success: false, error, provider, providerNote };
+  }
+
+  // If no candidates were found
+  if (!baseCandidates.length) {
+    return {
+      success: false,
+      error: providerNote || "No leads found from any configured provider.",
+      provider,
+      providerNote,
+      count: 0,
+      leads: [],
+    };
+  }
 
   const leads = baseCandidates.map((lead) => {
     const candidate = {
@@ -440,11 +670,18 @@ export async function discoverLeads(input = {}) {
       undiscovered_score: leadScore(lead),
       inferred_problems: problems,
     };
-    const profile = buildLeadBrief({ lead: candidate, businessType, city, offer, problems, signals });
+    const profile = buildLeadBrief({
+      lead: candidate,
+      businessType,
+      city,
+      offer,
+      problems,
+      signals,
+    });
     return { lead: candidate, profile };
   });
 
-  return { success: true, provider, count: leads.length, leads };
+  return { success: true, provider, providerNote, count: leads.length, leads };
 }
 
 export async function searchLeads(input = {}) {
@@ -453,18 +690,34 @@ export async function searchLeads(input = {}) {
   const city = String(input.city || "").trim();
   const offer = String(input.offer || "").trim();
 
-  if (!businessType) return { success: false, error: "Business type is required" };
+  if (!businessType)
+    return { success: false, error: "Business type is required" };
   if (!city) return { success: false, error: "City is required" };
   if (!offer) return { success: false, error: "Your offer is required" };
 
   const searchSlug = `${slugify(city)}-${slugify(businessType)}-${Date.now()}`;
   const signals = getBusinessSignals(businessType);
   const problems = inferProblems(businessType, offer);
-  const { baseCandidates, provider, providerNote } = await runDiscovery(
+  const { baseCandidates, provider, providerNote, error } = await runDiscovery(
     businessType,
     city,
     Number(input.limit || 10),
   );
+
+  // If there's an error from runDiscovery (no providers configured), return it
+  if (error) {
+    return { success: false, error, provider, providerNote };
+  }
+
+  // If no candidates were found
+  if (!baseCandidates.length) {
+    return {
+      success: false,
+      error: providerNote || "No leads found from any configured provider.",
+      provider,
+      providerNote,
+    };
+  }
 
   const candidates = baseCandidates.map((lead) => ({
     ...lead,
@@ -515,12 +768,23 @@ export async function searchLeads(input = {}) {
       search: searchSlug,
       created_at: today(),
     };
-    const body = buildLeadBrief({ lead: candidate, businessType, city, offer, problems, signals });
+    const body = buildLeadBrief({
+      lead: candidate,
+      businessType,
+      city,
+      offer,
+      problems,
+      signals,
+    });
     const path = join(DIRS.leads, `${slug}.md`);
     await writeFile(path, `${stringifyFrontMatter(data)}\n\n${body}`, "utf-8");
 
     const outreachPath = join(DIRS.outreach, `${slug}.md`);
-    await writeFile(outreachPath, `${stringifyFrontMatter({ ...data, lead: slug })}\n\n${body.split("## Cold Email Draft")[1]?.trim() || body}`, "utf-8");
+    await writeFile(
+      outreachPath,
+      `${stringifyFrontMatter({ ...data, lead: slug })}\n\n${body.split("## Cold Email Draft")[1]?.trim() || body}`,
+      "utf-8",
+    );
 
     saved.push({
       slug,
@@ -536,7 +800,11 @@ export async function searchLeads(input = {}) {
 
   return {
     success: true,
-    search: { slug: searchSlug, ...searchData, web_path: `/content/lead-searches/${searchSlug}.md` },
+    search: {
+      slug: searchSlug,
+      ...searchData,
+      web_path: `/content/lead-searches/${searchSlug}.md`,
+    },
     leads: saved,
     provider,
   };

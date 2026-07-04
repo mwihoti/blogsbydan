@@ -299,7 +299,10 @@
         </div>
 
         <div class="growth-results" id="lead-results">
-          <h3>Lead CRM</h3>
+          <div class="lead-results-header">
+            <h3>Lead CRM</h3>
+            <div class="filter-group" id="lead-filter-bar" role="group" aria-label="Filter leads by status"></div>
+          </div>
           <div class="post-grid" id="lead-grid"></div>
         </div>
       </section>
@@ -448,7 +451,11 @@
         </div>
         <div class="editor-actions">
           <span id="editor-status"></span>
-          <button type="button" class="button secondary compact" id="save-editor-btn">Save File</button>
+          <div class="editor-action-group">
+            <span class="editor-meta" id="editor-meta"></span>
+            <button type="button" class="button secondary compact" id="copy-editor-btn">Copy Markdown</button>
+            <button type="button" class="button primary compact" id="save-editor-btn">Save File</button>
+          </div>
         </div>
       </div>
     </section>

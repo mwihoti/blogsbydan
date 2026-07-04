@@ -1,0 +1,80 @@
+---
+title: Blockchain Centre: FitTribe Nairobi | Personal Trainers, Fitness Community & Workout Tracking
+business: blockchain-centre
+trend: fittribe-nairobi-personal-trainers-fitness-community-workout-tracking
+lead: nairobi-blockchain-centre-nairobi
+target_lead: Blockchain Centre Nairobi
+channel: TikTok/Reels
+goal: leads
+audience: Students and developers connected to Blockchain Centre Nairobi
+primary_asset: event-to-lead campaign page plus WhatsApp/LinkedIn follow-up copy
+campaign_promise: turn FitTribe Nairobi | Personal Trainers, Fitness Community & Workout Tracking interest into qualified event, cohort, or community leads for Blockchain Centre Nairobi
+price: 0
+currency: KES
+payment_method: Manual invoice
+payment_address: 
+payment_token: 
+status: draft
+created_at: 2026-06-26
+---
+
+Scene 1, 0-5s: Show the trend headline or visual reference. Caption: "This is not just a trend."
+Scene 2, 5-18s: Founder speaks to camera. Caption: "What it means for Students and developers"
+Scene 3, 18-40s: Show 3 simple action points. Caption: "What to check today"
+Scene 4, 40-55s: Show business offer. Caption: "Working space"
+Scene 5, 55-60s: CTA screen. Caption: "DM Blockchain Centre for help"
+
+## Image Prompts
+- A Kenyan SME founder reviewing daily operations in a clean, realistic office setting.
+- A social media trend dashboard with business and money signals highlighted.
+- A simple campaign CTA card for Blockchain Centre, professional and trustworthy.
+
+## Caption
+Trends are only useful when they help you make a better business decision. Here is what Students and developers should pay attention to now.
+
+## CTA
+Come join our community
+
+## Lead Generator
+### Ideal Leads
+- Students and developers connected to Blockchain Centre Nairobi who are already reacting to this trend.
+- People asking for recommendations, pricing, compliance help, implementation help, or trusted providers.
+- Businesses that mention the pain in comments, WhatsApp groups, LinkedIn posts, events, or founder communities.
+
+### Where To Find Them
+- LinkedIn posts and comments around the trend.
+- WhatsApp founder groups and customer communities.
+- Reddit, X, YouTube comments, and local business forums.
+- Existing customers who can refer another founder with the same problem.
+
+### Lead Magnet
+Offer event-to-lead campaign page plus WhatsApp/LinkedIn follow-up copy. Use it to start a conversation, then offer Working space.
+
+### Qualification Questions
+1. What kind of business do you run?
+2. Where is this trend showing up in your work right now?
+3. Have you already tried to solve it?
+4. What happens if this is not fixed in the next 7-14 days?
+5. Would a paid Working space help you move faster?
+
+### Outreach Message
+Hi, I saw your interest around FitTribe Nairobi | Personal Trainers, Fitness Community & Workout Tracking. Blockchain Centre put together a practical event-to-lead campaign page plus WhatsApp/LinkedIn follow-up copy for Students and developers connected to Blockchain Centre Nairobi. If useful, we can also help with Working space. Want me to send it?
+
+### Follow-Up Sequence
+Day 0: Send the checklist and ask one qualification question.
+Day 1: Share one practical fix related to Tech consultancy and tech education.
+Day 3: Offer Come join our community.
+Day 7: Ask if they want a quick review or referral to someone who can help.
+
+## Payment Request
+Offer: Working space
+Payment: 0 KES via Manual invoice
+
+## Grounding Notes
+Tone: clear, practical, founder-led
+Goal: leads
+
+## Business Knowledge Used
+- Tired of losing track of your habits: Your journey is in progress. Check in today to keep your streak alive and earn $HABIT tokens! Go to Dashboard View Community 1 Your Day Streak Keep it burning! 🔥 13 Your Workouts Great consistency! 130 $HABIT Earned 10 per check-in Everything you need to stay consistent Simple tools that work. No gimmicks, just result
+- Team1 Kenya Mini Hack positioning and offer notes: Team1 Kenya Mini Hack is a 3-month builder accelerator for Kenyan engineers, founders, and teams who want to ship real products on Avalanche. The programme is practical and execution-focused. It is not just a theory class or one-day hackathon. Builders complete quests, attend sessions, pick real bounty problems, build 
+- https://www.blockchaincentrenbo.com/events/: https://www.blockchaincentrenbo.com/events/

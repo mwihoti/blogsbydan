@@ -1,18 +1,14 @@
 ---
 title: Why Local-First AI Writing Wins
 date: 2026-06-16
-status: idea
-tags:
-  - Writing
-  - AI
-  - Local-First
+status: researched
+tags: ["Writing","AI","Local-First"]
 summary: Exploring why keeping your writing workflow local-first with AI assistance beats cloud-only solutions.
 target_reader: Writers and developers curious about AI-assisted workflows
 thesis: Local-first AI writing gives you privacy, control, and portability without sacrificing the benefits of AI assistance.
 writing_style: Personal essay
-medium_url:
-canonical_url:
 ---
+
 
 ## Idea
 

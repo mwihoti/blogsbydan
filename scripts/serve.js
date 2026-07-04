@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { getBusinessSignals } from "../data/business-signals.js";
 import { loadEnvFile } from "node:process";
 import { listPosts, getPost, createPost } from "../api/posts.js";
-import { discoverLeads, leadProviderStatus, listLeadItems, searchLeads } from "../api/leads.js";
+import { discoverLeads, leadProviderStatus, listLeadItems, searchLeads, updateLeadStatus } from "../api/leads.js";
 import { runWorkflowStep } from "../api/workflow.js";
 import {
   addKnowledge,
@@ -171,6 +171,12 @@ export function createApp() {
       const body = await readBody(req);
       const result = await searchLeads(body);
       return jsonResponse(res, result, result.success ? 201 : 400);
+    }
+
+    if (pathname === "/api/leads/status" && method === "POST") {
+      const body = await readBody(req);
+      const result = await updateLeadStatus(body);
+      return jsonResponse(res, result, result.success ? 200 : 400);
     }
 
     if (pathname === "/api/leads/discover" && method === "POST") {
