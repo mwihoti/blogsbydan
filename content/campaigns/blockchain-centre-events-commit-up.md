@@ -58,12 +58,12 @@ Target leads:
 
 Qualification questions:
 
-1. What kind of business, community, or team do you run?
-2. What event, campaign, or outcome are you trying to create?
-3. What has made this hard so far?
+1. What kind of business, community, or team do you run? I have learned people in my company,most workis done through computers,
+2. What event, campaign, or outcome are you trying to create? get more events at our space, let people book space, coworking space
+3. What has made this hard so far? noo current ongoing evets and partners
 4. What happens if this is not solved in the next 7-14 days?
 5. Would a paid Working space help you move faster?
-
+no
 Outreach message:
 
 Hi, I saw your interest around Events commit up. Blockchain Centre put together event-to-lead campaign page plus WhatsApp/LinkedIn follow-up copy for Students and developers connected to Blockchain Centre Nairobi. If useful, we can also help with Working space. Want me to send it?
