@@ -7,7 +7,13 @@ import { fileURLToPath } from "node:url";
 import { getBusinessSignals } from "../data/business-signals.js";
 import { loadEnvFile } from "node:process";
 import { listPosts, getPost, createPost } from "../api/posts.js";
-import { discoverLeads, leadProviderStatus, listLeadItems, searchLeads, updateLeadStatus } from "../api/leads.js";
+import {
+  discoverLeads,
+  leadProviderStatus,
+  listLeadItems,
+  searchLeads,
+  updateLeadStatus,
+} from "../api/leads.js";
 import { runWorkflowStep } from "../api/workflow.js";
 import {
   addKnowledge,
@@ -57,9 +63,15 @@ function jsonResponse(res, data, status = 200) {
 function readBody(req) {
   return new Promise((resolve) => {
     let body = "";
-    req.on("data", (chunk) => { body += chunk; });
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
     req.on("end", () => {
-      try { resolve(JSON.parse(body)); } catch { resolve({}); }
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        resolve({});
+      }
     });
   });
 }
@@ -107,15 +119,20 @@ export function createApp() {
     if (pathname === "/api/workflow/run" && method === "POST") {
       const body = await readBody(req);
       const { path: postPath, step } = body;
-      if (!postPath) return jsonResponse(res, { error: "Missing post path" }, 400);
+      if (!postPath)
+        return jsonResponse(res, { error: "Missing post path" }, 400);
       try {
         const result = await runWorkflowStep(postPath, step);
         return jsonResponse(res, result, 200);
       } catch (err) {
-        return jsonResponse(res, {
-          success: false,
-          error: err.message || "Workflow failed",
-        }, 200);
+        return jsonResponse(
+          res,
+          {
+            success: false,
+            error: err.message || "Workflow failed",
+          },
+          200,
+        );
       }
     }
 
@@ -164,7 +181,10 @@ export function createApp() {
     }
 
     if (pathname === "/api/leads/signals" && method === "GET") {
-      return jsonResponse(res, getBusinessSignals(url.searchParams.get("business_type") || ""));
+      return jsonResponse(
+        res,
+        getBusinessSignals(url.searchParams.get("business_type") || ""),
+      );
     }
 
     if (pathname === "/api/leads/search" && method === "POST") {
@@ -187,7 +207,8 @@ export function createApp() {
 
     if (pathname === "/api/growth/signals" && method === "GET") {
       const source = url.searchParams.get("source") || "gdelt";
-      const query = url.searchParams.get("query") || "Kenya business SME founder";
+      const query =
+        url.searchParams.get("query") || "Kenya business SME founder";
       const feed = url.searchParams.get("feed") || "";
       try {
         let signals = [];
@@ -210,13 +231,17 @@ export function createApp() {
         }
         return jsonResponse(res, { success: true, source, query, signals });
       } catch (err) {
-        return jsonResponse(res, {
-          success: false,
-          source,
-          query,
-          signals: [],
-          error: err.message || "Could not fetch signals",
-        }, 200);
+        return jsonResponse(
+          res,
+          {
+            success: false,
+            source,
+            query,
+            signals: [],
+            error: err.message || "Could not fetch signals",
+          },
+          200,
+        );
       }
     }
 
@@ -276,11 +301,15 @@ export function createApp() {
   });
 }
 
+const server = createApp();
+export default server;
+
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
   const PORT = process.env.PORT || 3030;
-  const server = createApp();
+
   server.listen(PORT, () => {
     console.log(`Blogs by Dan running at http://localhost:${PORT}`);
   });
 }
+export { createApp };
