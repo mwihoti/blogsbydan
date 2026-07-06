@@ -312,4 +312,3 @@ if (isMain) {
     console.log(`Blogs by Dan running at http://localhost:${PORT}`);
   });
 }
-export { createApp };
