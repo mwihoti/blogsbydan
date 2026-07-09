@@ -1,8 +1,8 @@
 {
-  "name": "blogsbydan",
+  "name": "gemflow",
   "version": "0.1.0",
   "private": true,
-  "description": "Markdown-first blog center with AI-powered writing workflow",
+  "description": "AI-powered content workflow with blockchain payments for Kenyan businesses",
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.js",
@@ -16,6 +16,12 @@
     "test:watch": "node --test --watch tests/**/*.test.js",
     "test:coverage": "node --experimental-test-coverage --test tests/**/*.test.js"
   },
-  "keywords": ["blog", "markdown", "obsidian", "medium", "writing"],
+  "keywords": [
+    "blog",
+    "markdown",
+    "obsidian",
+    "medium",
+    "writing"
+  ],
   "license": "MIT"
 }

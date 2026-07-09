@@ -58,7 +58,7 @@ async function main() {
   }
 
   const publishedFile = join(PUBLISHED_DIR, `${slug}.md`);
-  const canonicalUrl = `https://blogsbydan.com/posts/${slug}`;
+  const canonicalUrl = `https://gemflow.com/posts/${slug}`;
 
   if (dryRun) {
     console.log("[Dry Run] Would perform the following:");
@@ -77,7 +77,8 @@ async function main() {
       const lines = fm.split("\n");
       const updated = lines.map((line) => {
         if (line.startsWith("status:")) return "status: published";
-        if (line.startsWith("canonical_url:")) return `canonical_url: ${canonicalUrl}`;
+        if (line.startsWith("canonical_url:"))
+          return `canonical_url: ${canonicalUrl}`;
         return line;
       });
       if (!updated.some((l) => l.startsWith("canonical_url:"))) {

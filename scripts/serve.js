@@ -309,6 +309,6 @@ if (isMain) {
   const PORT = process.env.PORT || 3030;
 
   server.listen(PORT, () => {
-    console.log(`Blogs by Dan running at http://localhost:${PORT}`);
+    console.log(`GemFlow running at http://localhost:${PORT}`);
   });
 }

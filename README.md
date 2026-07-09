@@ -1,6 +1,6 @@
-# Blogs by Dan
+# GemFlow
 
-Markdown-first blog center with AI-powered writing workflow. Write in Obsidian, use AI agents for research/outline/draft/edit, and publish to your own blog and Medium.
+AI-powered content workflow with blockchain payments. Write in Obsidian, use AI agents for research/outline/draft/edit, generate business campaigns, and accept Avalanche payments.
 
 ## Quick Start
 

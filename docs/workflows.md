@@ -1,4 +1,4 @@
-# Blogs by Dan Workflows
+# GemFlow Workflows
 
 This document shows the practical workflows for the agent-based writing system.
 

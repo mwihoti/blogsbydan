@@ -7,14 +7,17 @@ function stripHtml(html = "") {
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, "\"")
+    .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function metaContent(html, name) {
-  const re = new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["']`, "i");
+  const re = new RegExp(
+    `<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["']`,
+    "i",
+  );
   return html.match(re)?.[1] || "";
 }
 
@@ -25,7 +28,7 @@ export async function fetchWebpageSignal({ url } = {}) {
 
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "blogsbydan-growth-mvp/0.1",
+      "User-Agent": "gemflow-growth-mvp/0.1",
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     },
   });
@@ -35,17 +38,21 @@ export async function fetchWebpageSignal({ url } = {}) {
     throw new Error(`Website returned ${res.status}: ${html.slice(0, 120)}`);
   }
 
-  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()
-    || metaContent(html, "og:title")
-    || url;
-  const description = metaContent(html, "description") || metaContent(html, "og:description");
+  const title =
+    html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ||
+    metaContent(html, "og:title") ||
+    url;
+  const description =
+    metaContent(html, "description") || metaContent(html, "og:description");
   const text = description || stripHtml(html).slice(0, 1000);
 
-  return [normalizeSourceItem({
-    source: "webpage",
-    title: stripHtml(title).slice(0, 140),
-    url,
-    text,
-    raw: { url },
-  })];
+  return [
+    normalizeSourceItem({
+      source: "webpage",
+      title: stripHtml(title).slice(0, 140),
+      url,
+      text,
+      raw: { url },
+    }),
+  ];
 }

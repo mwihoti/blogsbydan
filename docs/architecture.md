@@ -1,4 +1,4 @@
-# Blogs by Dan Agent Architecture
+# GemFlow Agent Architecture
 
 This architecture turns the repo into a Markdown-first writing center that uses specialized agents for research, outlining, drafting, editing, checking, and publishing preparation.
 

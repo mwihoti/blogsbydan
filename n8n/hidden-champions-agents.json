@@ -58,7 +58,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://blogsbydan.onrender.com/api/leads/discover",
+        "url": "https://gemflow.onrender.com/api/leads/discover",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ business_type: $json.business_type, city: $json.city, offer: $json.offer, limit: 5 }) }}",
@@ -123,7 +123,11 @@
               "id": "c1",
               "leftValue": "={{ $json.output.verified }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -178,7 +182,11 @@
               "id": "c2",
               "leftValue": "={{ $json.output.generic }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -216,20 +224,73 @@
     }
   ],
   "connections": {
-    "Manual Trigger": { "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]] },
-    "Webhook (from MVP)": { "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]] },
-    "Build Request": { "main": [[{ "node": "Discover (MVP)", "type": "main", "index": 0 }]] },
-    "Discover (MVP)": { "main": [[{ "node": "Split Leads", "type": "main", "index": 0 }]] },
-    "Split Leads": { "main": [[{ "node": "Verifier", "type": "main", "index": 0 }]] },
-    "Verifier Model (Gemini Pro)": { "ai_languageModel": [[{ "node": "Verifier", "type": "ai_languageModel", "index": 0 }]] },
-    "Verifier Parser": { "ai_outputParser": [[{ "node": "Verifier", "type": "ai_outputParser", "index": 0 }]] },
-    "Verifier": { "main": [[{ "node": "IF Verified", "type": "main", "index": 0 }]] },
-    "IF Verified": { "main": [[{ "node": "Judge (Generic Detector)", "type": "main", "index": 0 }], []] },
-    "Judge Model (Gemini Flash)": { "ai_languageModel": [[{ "node": "Judge (Generic Detector)", "type": "ai_languageModel", "index": 0 }]] },
-    "Judge Parser": { "ai_outputParser": [[{ "node": "Judge (Generic Detector)", "type": "ai_outputParser", "index": 0 }]] },
-    "Judge (Generic Detector)": { "main": [[{ "node": "IF Generic", "type": "main", "index": 0 }]] },
-    "IF Generic": { "main": [[{ "node": "Humanizer", "type": "main", "index": 0 }], []] },
-    "Humanizer Model (Gemini Pro)": { "ai_languageModel": [[{ "node": "Humanizer", "type": "ai_languageModel", "index": 0 }]] }
+    "Manual Trigger": {
+      "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]]
+    },
+    "Webhook (from MVP)": {
+      "main": [[{ "node": "Build Request", "type": "main", "index": 0 }]]
+    },
+    "Build Request": {
+      "main": [[{ "node": "Discover (MVP)", "type": "main", "index": 0 }]]
+    },
+    "Discover (MVP)": {
+      "main": [[{ "node": "Split Leads", "type": "main", "index": 0 }]]
+    },
+    "Split Leads": {
+      "main": [[{ "node": "Verifier", "type": "main", "index": 0 }]]
+    },
+    "Verifier Model (Gemini Pro)": {
+      "ai_languageModel": [
+        [{ "node": "Verifier", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "Verifier Parser": {
+      "ai_outputParser": [
+        [{ "node": "Verifier", "type": "ai_outputParser", "index": 0 }]
+      ]
+    },
+    "Verifier": {
+      "main": [[{ "node": "IF Verified", "type": "main", "index": 0 }]]
+    },
+    "IF Verified": {
+      "main": [
+        [{ "node": "Judge (Generic Detector)", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Judge Model (Gemini Flash)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Judge (Generic Detector)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Judge Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Judge (Generic Detector)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Judge (Generic Detector)": {
+      "main": [[{ "node": "IF Generic", "type": "main", "index": 0 }]]
+    },
+    "IF Generic": {
+      "main": [[{ "node": "Humanizer", "type": "main", "index": 0 }], []]
+    },
+    "Humanizer Model (Gemini Pro)": {
+      "ai_languageModel": [
+        [{ "node": "Humanizer", "type": "ai_languageModel", "index": 0 }]
+      ]
+    }
   },
   "settings": { "executionOrder": "v1" }
 }
